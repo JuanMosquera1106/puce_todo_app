@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "puce_todo_app",
+    "slug": "puce_todo_app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "scheme": "puceapp",  // Añadimos el scheme para deep linking
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.puce.todoapp"  // Añadir un identificador de paquete único para iOS
+    },
+    "android": {
+      "package": "com.puce.todoapp",  // Añadir un identificador de paquete único para Android
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
