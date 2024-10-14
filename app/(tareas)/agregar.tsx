@@ -6,11 +6,14 @@ import {
   Switch,
   Button,
   View,
+  Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useTareas } from "../../context/TareasContext"; // Asegúrate de usar el contexto adecuado
+import { useTareas } from "../../context/TareasContext";
 import { Tarea } from "../../interfaces/Tarea";
 import { Picker } from "@react-native-picker/picker";
+import DateTimePicker from "@react-native-community/datetimepicker"; // Importamos el DateTimePicker
+import { Platform } from "react-native";
 
 // Función para generar un ID único
 const generateId = (): string => {
@@ -19,13 +22,13 @@ const generateId = (): string => {
 
 export default function AgregarTarea() {
   const router = useRouter();
-  const { agregarTarea } = useTareas(); // Obtenemos la función para agregar la tarea al contexto
+  const { agregarTarea } = useTareas();
 
   const [tareaNombre, setTareaNombre] = useState("");
   const [tareaPrioridad, setTareaPrioridad] = useState<
     "Baja" | "Media" | "Alta"
-  >("Media");
-  const [tareaMateria, setTareaMateria] = useState("");
+  >("Baja");
+  const [tareaMateria, setTareaMateria] = useState("Ninguna");
   const [tareaFechaVencimiento, setTareaFechaVencimiento] = useState("");
   const [tareaRepetir, setTareaRepetir] = useState(false);
   const [configurarPomodoro, setConfigurarPomodoro] = useState(false);
@@ -35,9 +38,21 @@ export default function AgregarTarea() {
     intervalo: 4,
   });
 
+  // Estado para controlar el DateTimePicker
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // Manejador del cambio de fecha
+  const handleDateChange = (event: any, selectedDate: Date | undefined) => {
+    setShowDatePicker(false); // Ocultamos el picker tras seleccionar una fecha
+    if (selectedDate) {
+      const formattedDate = selectedDate.toISOString().split("T")[0]; // Formato AAAA-MM-DD
+      setTareaFechaVencimiento(formattedDate);
+    }
+  };
+
   const handleAgregarTarea = () => {
     const nuevaTarea: Tarea = {
-      id: generateId(), // Genera un ID único
+      id: generateId(),
       nombre: tareaNombre,
       prioridad: tareaPrioridad,
       materia: tareaMateria,
@@ -46,8 +61,8 @@ export default function AgregarTarea() {
       pomodoro: configurarPomodoro ? pomodoroConfig : undefined,
     };
 
-    agregarTarea(nuevaTarea); // Agregamos la nueva tarea al contexto o estado global
-    router.back(); // Volvemos a la pantalla anterior
+    agregarTarea(nuevaTarea);
+    router.back();
   };
 
   return (
@@ -73,6 +88,7 @@ export default function AgregarTarea() {
         onValueChange={(itemValue: "Baja" | "Media" | "Alta") =>
           setTareaPrioridad(itemValue)
         }
+        style={{ borderColor: "gray", borderWidth: 1, marginVertical: 10 }}
       >
         <Picker.Item label="Baja" value="Baja" />
         <Picker.Item label="Media" value="Media" />
@@ -80,30 +96,38 @@ export default function AgregarTarea() {
       </Picker>
 
       <Text>Materia</Text>
-      <TextInput
-        style={{
-          borderColor: "gray",
-          borderWidth: 1,
-          padding: 8,
-          marginVertical: 10,
-        }}
-        value={tareaMateria}
-        onChangeText={setTareaMateria}
-        placeholder="Materia"
-      />
+      <Picker
+        selectedValue={tareaMateria}
+        onValueChange={(itemValue) => setTareaMateria(itemValue)}
+        style={{ borderColor: "gray", borderWidth: 1, marginVertical: 10 }}
+      >
+        <Picker.Item label="Ninguna" value="Ninguna" />
+        <Picker.Item label="Matemáticas" value="Matemáticas" />
+        <Picker.Item label="Historia" value="Historia" />
+        <Picker.Item label="Ciencias" value="Ciencias" />
+      </Picker>
 
-      <Text>Fecha de Vencimiento (AAAA-MM-DD)</Text>
-      <TextInput
+      <Text>Fecha de Vencimiento</Text>
+      <Pressable
+        onPress={() => setShowDatePicker(true)} // Mostramos el picker al presionar
         style={{
           borderColor: "gray",
           borderWidth: 1,
           padding: 8,
           marginVertical: 10,
         }}
-        value={tareaFechaVencimiento}
-        onChangeText={setTareaFechaVencimiento}
-        placeholder="Fecha de vencimiento"
-      />
+      >
+        <Text>{tareaFechaVencimiento || "Seleccionar fecha"}</Text>
+      </Pressable>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={new Date()} // Fecha inicial (actual)
+          mode="date" // Selección de solo fecha
+          display={Platform.OS === "ios" ? "spinner" : "default"} // Tipo de visualización
+          onChange={handleDateChange} // Manejador para la fecha seleccionada
+        />
+      )}
 
       <View
         style={{
