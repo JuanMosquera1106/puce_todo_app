@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { styled } from "nativewind";
-import { useTareas } from "../../context/TareasContext"; // Importamos el contexto
+import { useTareas } from "../../context/TareasContext";
 import { AddIcon } from "../../components/Icons";
 
 // Crear una versión estilizada de `Pressable` y `Text`
@@ -17,25 +17,25 @@ const StyledText = styled(Text);
 
 export default function GestionTareas() {
   const router = useRouter();
-  const { tareas, cargando, eliminarTarea } = useTareas(); // Usamos el contexto
+  const { tareas, cargando, eliminarTarea } = useTareas();
 
   if (cargando) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Cargando tareas...</Text> {/* Mostrar un mensaje de carga */}
+        <Text>Cargando tareas...</Text>
       </View>
     );
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: "white", padding: 16 }}>
-      <StyledText className="text-2xl font-bold text-darrk mb-4">
+      <StyledText className="text-2xl font-bold text-dark mb-4">
         Gestión de Tareas
       </StyledText>
 
-      {tareas.length === 0 ? (
-        <StyledText className="text-darrk/80">
+      {tareas && tareas.length === 0 ? (
+        <StyledText className="text-dark/80">
           No hay tareas disponibles
         </StyledText>
       ) : (
@@ -44,16 +44,16 @@ export default function GestionTareas() {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <StyledPressable className="p-4 border-b border-gray-500">
-              <StyledText className="text-lg text-darrk">
+              <StyledText className="text-lg text-dark">
                 {item.nombre}
               </StyledText>
-              <StyledText className="text-darrk/80">
+              <StyledText className="text-dark/80">
                 Materia: {item.materia}
               </StyledText>
-              <StyledText className="text-darrk/80">
+              <StyledText className="text-dark/80">
                 Prioridad: {item.prioridad}
               </StyledText>
-              <StyledText className="text-darrk/80">
+              <StyledText className="text-dark/80">
                 Fecha de Vencimiento: {item.fechaVencimiento}
               </StyledText>
 
@@ -98,7 +98,6 @@ export default function GestionTareas() {
         />
       )}
 
-      {/* Botón flotante para agregar nuevas tareas */}
       <StyledPressable
         onPress={() => router.push("/agregar")}
         className="bg-gray-200 w-16 h-16 rounded-full active:opacity-80 flex items-center justify-center absolute bottom-8 right-8"
