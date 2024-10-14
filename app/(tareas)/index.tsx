@@ -9,7 +9,7 @@ import {
 import { useRouter } from "expo-router";
 import { styled } from "nativewind";
 import { useTareas } from "../../context/TareasContext";
-import { AddIcon } from "../../components/Icons";
+import { AddIcon, EditIcon, DeleteIcon } from "../../components/Icons";
 
 // Crear una versión estilizada de `Pressable` y `Text`
 const StyledPressable = styled(Pressable);
@@ -81,16 +81,15 @@ export default function GestionTareas() {
                       },
                     })
                   }
-                  className="bg-blue-500 px-4 py-2 rounded active:opacity-80"
+                  className="px-4 py-2 rounded active:opacity-80"
                 >
-                  <StyledText className="text-white">Editar</StyledText>
+                  <EditIcon />
                 </StyledPressable>
-
                 <StyledPressable
                   onPress={() => eliminarTarea(item.id)}
-                  className="bg-red-500 px-4 py-2 rounded active:opacity-80"
+                  className="px-4 py-2 rounded active:opacity-80"
                 >
-                  <StyledText className="text-white">Eliminar</StyledText>
+                  <DeleteIcon />
                 </StyledPressable>
               </View>
             </StyledPressable>
