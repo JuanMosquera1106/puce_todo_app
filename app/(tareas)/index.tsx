@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   FlatList,
   Pressable,
@@ -6,18 +6,43 @@ import {
   View,
   ActivityIndicator,
 } from "react-native";
-import { useRouter } from "expo-router";
 import { styled } from "nativewind";
 import { useTareas } from "../../context/TareasContext";
 import { AddIcon, EditIcon, DeleteIcon } from "../../components/Icons";
+import FormularioTareaModal from "../../components/FormularioTarea";
+import { Tarea } from "../../interfaces/Tarea"; // Importa la interfaz Tarea
 
 // Crear una versión estilizada de `Pressable` y `Text`
 const StyledPressable = styled(Pressable);
 const StyledText = styled(Text);
 
 export default function GestionTareas() {
-  const router = useRouter();
   const { tareas, cargando, eliminarTarea } = useTareas();
+
+  // Estado para controlar la visibilidad del modal
+  const [modalVisible, setModalVisible] = useState(false);
+  const [tareaActual, setTareaActual] = useState<Tarea | undefined>(undefined); // Cambiado a undefined
+  const [esEditar, setEsEditar] = useState(false); // Controla si estamos en modo edición
+
+  // Mostrar el modal para agregar una nueva tarea
+  const handleAgregarTarea = () => {
+    setTareaActual(undefined); // Cambiado a undefined en lugar de null
+    setEsEditar(false); // Modo agregar
+    setModalVisible(true); // Mostrar el modal
+  };
+
+  // Mostrar el modal para editar una tarea
+  const handleEditarTarea = (tarea: Tarea) => {
+    // Definir tipo 'Tarea' explícitamente
+    setTareaActual(tarea); // Cargamos la tarea actual
+    setEsEditar(true); // Modo edición
+    setModalVisible(true); // Mostrar el modal
+  };
+
+  // Función para cerrar el modal
+  const handleCloseModal = () => {
+    setModalVisible(false);
+  };
 
   if (cargando) {
     return (
@@ -65,31 +90,13 @@ export default function GestionTareas() {
                 }}
               >
                 <StyledPressable
-                  onPress={() =>
-                    router.push({
-                      pathname: "/editar",
-                      params: {
-                        id: item.id,
-                        nombre: item.nombre,
-                        prioridad: item.prioridad,
-                        materia: item.materia,
-                        fechaVencimiento: item.fechaVencimiento,
-                        recordatorio: item.recordatorio
-                          ? JSON.stringify(item.recordatorio)
-                          : undefined,
-                        repetir: item.repetir?.toString() || "",
-                        pomodoro: item.pomodoro
-                          ? JSON.stringify(item.pomodoro)
-                          : undefined,
-                      },
-                    })
-                  }
+                  onPress={() => handleEditarTarea(item)} // Editar tarea
                   className="px-4 py-2 rounded active:opacity-80"
                 >
                   <EditIcon />
                 </StyledPressable>
                 <StyledPressable
-                  onPress={() => eliminarTarea(item.id)}
+                  onPress={() => eliminarTarea(item.id)} // Eliminar tarea
                   className="px-4 py-2 rounded active:opacity-80"
                 >
                   <DeleteIcon />
@@ -101,11 +108,21 @@ export default function GestionTareas() {
       )}
 
       <StyledPressable
-        onPress={() => router.push("/agregar")}
+        onPress={handleAgregarTarea} // Agregar nueva tarea
         className="bg-gray-200 w-16 h-16 rounded-full active:opacity-80 flex items-center justify-center absolute bottom-8 right-8"
       >
         <AddIcon />
       </StyledPressable>
+
+      {/* Modal para agregar o editar tarea */}
+      {modalVisible && (
+        <FormularioTareaModal
+          visible={modalVisible}
+          onClose={handleCloseModal}
+          tareaInicial={tareaActual} // Pasa la tarea actual si estamos editando
+          esEditar={esEditar} // Define si es edición o agregado
+        />
+      )}
     </View>
   );
 }

@@ -72,3 +72,8 @@ export const TimeIcon = (props: { size?: number; color?: string }) => (
 export const RememberIcon = (props: { size?: number; color?: string }) => (
   <FontAwesome name="bell" size={24} color="black" />
 );
+
+// Componente para el icono Info con FontAwesome
+export const CloseIcon = (props: { size?: number; color?: string }) => (
+  <FontAwesome name="close" size={24} color="black" />
+);

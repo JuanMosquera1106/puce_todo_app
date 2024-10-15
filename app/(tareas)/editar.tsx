@@ -34,5 +34,14 @@ export default function EditarTarea() {
       : null,
   };
 
-  return <FormularioTarea esEditar={true} tareaInicial={tareaInicial} />;
+  return (
+    <FormularioTarea
+      esEditar={true}
+      tareaInicial={tareaInicial}
+      visible={true}
+      onClose={() => {
+        // Implement the onClose functionality here
+      }}
+    />
+  );
 }
