@@ -74,7 +74,10 @@ export default function GestionTareas() {
                         prioridad: item.prioridad,
                         materia: item.materia,
                         fechaVencimiento: item.fechaVencimiento,
-                        repetir: item.repetir.toString(),
+                        recordatorio: item.recordatorio
+                          ? JSON.stringify(item.recordatorio)
+                          : undefined,
+                        repetir: item.repetir?.toString() || "",
                         pomodoro: item.pomodoro
                           ? JSON.stringify(item.pomodoro)
                           : undefined,
