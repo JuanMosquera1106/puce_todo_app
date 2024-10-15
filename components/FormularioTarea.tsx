@@ -121,11 +121,11 @@ export default function FormularioTareaModal({
         }} // Fondo oscurecido
         onPress={onClose} // Cierra el modal al hacer clic fuera del contenido visible
       >
-        <StyledView
-          className="flex-1 justify-end items-center bg-opacity-500"
-          onStartShouldSetResponder={() => true}
-        >
-          <StyledView className="bg-white p-6 border border-gray-300 rounded-lg w-[99%]">
+        <StyledView className="flex-1 justify-end items-center bg-opacity-500">
+          <StyledView
+            className="bg-white p-6 border border-gray-300 rounded-lg w-[99%]"
+            onStartShouldSetResponder={() => true}
+          >
             <StyledText className="text-2xl mb-4">
               {esEditar ? "Editar Tarea" : "Agregar Tarea"}
             </StyledText>
