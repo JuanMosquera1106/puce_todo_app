@@ -7,36 +7,35 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { styled } from "nativewind";
-import { useTareas } from "../../context/TareasContext";
-import { AddIcon, EditIcon, DeleteIcon } from "../../components/Icons";
-import FormularioTareaModal from "../../components/FormularioTarea";
-import { Tarea } from "../../interfaces/Tarea"; // Importa la interfaz Tarea
+import { TareasProvider, useTareas } from "../context/TareasContext"; // Asegúrate de que la ruta sea correcta
+import { AddIcon, EditIcon, DeleteIcon } from "../components/Icons";
+import FormularioTareaModal from "../components/FormularioTarea";
+import { Tarea } from "../interfaces/Tarea"; // Importa la interfaz Tarea
 
 // Crear una versión estilizada de `Pressable` y `Text`
 const StyledPressable = styled(Pressable);
 const StyledText = styled(Text);
 
-export default function GestionTareas() {
+function GestionTareas() {
   const { tareas, cargando, eliminarTarea } = useTareas();
 
   // Estado para controlar la visibilidad del modal
   const [modalVisible, setModalVisible] = useState(false);
-  const [tareaActual, setTareaActual] = useState<Tarea | undefined>(undefined); // Cambiado a undefined
-  const [esEditar, setEsEditar] = useState(false); // Controla si estamos en modo edición
+  const [tareaActual, setTareaActual] = useState<Tarea | undefined>(undefined);
+  const [esEditar, setEsEditar] = useState(false);
 
   // Mostrar el modal para agregar una nueva tarea
   const handleAgregarTarea = () => {
-    setTareaActual(undefined); // Cambiado a undefined en lugar de null
-    setEsEditar(false); // Modo agregar
-    setModalVisible(true); // Mostrar el modal
+    setTareaActual(undefined);
+    setEsEditar(false);
+    setModalVisible(true);
   };
 
   // Mostrar el modal para editar una tarea
   const handleEditarTarea = (tarea: Tarea) => {
-    // Definir tipo 'Tarea' explícitamente
-    setTareaActual(tarea); // Cargamos la tarea actual
-    setEsEditar(true); // Modo edición
-    setModalVisible(true); // Mostrar el modal
+    setTareaActual(tarea);
+    setEsEditar(true);
+    setModalVisible(true);
   };
 
   // Función para cerrar el modal
@@ -55,9 +54,7 @@ export default function GestionTareas() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "white", padding: 16 }}>
-      <StyledText className="text-2xl font-bold text-dark mb-4">
-        Gestión de Tareas
-      </StyledText>
+
 
       {tareas && tareas.length === 0 ? (
         <StyledText className="text-dark/80">
@@ -109,7 +106,7 @@ export default function GestionTareas() {
 
       <StyledPressable
         onPress={handleAgregarTarea} // Agregar nueva tarea
-        className="bg-gray-200 w-16 h-16 rounded-full active:opacity-80 flex items-center justify-center absolute bottom-8 right-8"
+        className="bg-gray-200 w-16 h-16 rounded-full active:opacity-80 flex items-center justify-center absolute bottom-40 right-10"
       >
         <AddIcon />
       </StyledPressable>
@@ -126,3 +123,13 @@ export default function GestionTareas() {
     </View>
   );
 }
+
+const Index = () => {
+  return (
+    <TareasProvider>
+      <GestionTareas />
+    </TareasProvider>
+  );
+};
+
+export default Index;
