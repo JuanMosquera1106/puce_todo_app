@@ -1,128 +1,96 @@
-import React, { useState } from "react";
-import {
-  FlatList,
-  Pressable,
-  Text,
-  View,
-  ActivityIndicator,
-} from "react-native";
-import { styled } from "nativewind";
-import { useTareas } from "../../context/TareasContext";
-import { AddIcon, EditIcon, DeleteIcon } from "../../components/Icons";
+import React, { useState } from "react"; // Importar useState
+import { ScrollView, View, StyleSheet } from "react-native"; // Importar ScrollView
+import Calendario from "../../components/FiltroCalendario";
+import ListaTareas from "../../components/ListaTareas";
+import BotonAgregarTarea from "../../components/BotonAgregarTarea";
 import FormularioTareaModal from "../../components/FormularioTarea";
-import { Tarea } from "../../interfaces/Tarea"; // Importa la interfaz Tarea
+import { Tarea } from "../../interfaces/Tarea"; // Importar la interfaz Tarea
+import { TareasProvider } from "../../context/TareasContext"; // Asegúrate de que la ruta sea correcta
 
-// Crear una versión estilizada de `Pressable` y `Text`
-const StyledPressable = styled(Pressable);
-const StyledText = styled(Text);
+const Header: React.FC<{
+  fechaSeleccionada: Date;
+  setFechaSeleccionada: (fecha: Date) => void;
+}> = ({ fechaSeleccionada, setFechaSeleccionada }) => {
+  return (
+    <View style={styles.header}>
+      <Calendario
+        fechaSeleccionada={fechaSeleccionada}
+        setFechaSeleccionada={setFechaSeleccionada}
+      />
+    </View>
+  );
+};
 
-export default function GestionTareas() {
-  const { tareas, cargando, eliminarTarea } = useTareas();
-
-  // Estado para controlar la visibilidad del modal
+const GestionTareas: React.FC = () => {
+  const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date());
   const [modalVisible, setModalVisible] = useState(false);
-  const [tareaActual, setTareaActual] = useState<Tarea | undefined>(undefined); // Cambiado a undefined
-  const [esEditar, setEsEditar] = useState(false); // Controla si estamos en modo edición
+  const [tareaActual, setTareaActual] = useState<Tarea | undefined>(undefined); // Usar undefined en lugar de null
+  const [esEditar, setEsEditar] = useState(false);
 
-  // Mostrar el modal para agregar una nueva tarea
-  const handleAgregarTarea = () => {
-    setTareaActual(undefined); // Cambiado a undefined en lugar de null
-    setEsEditar(false); // Modo agregar
-    setModalVisible(true); // Mostrar el modal
+  const handleAbrirModal = (tarea: Tarea | undefined) => {
+    setTareaActual(tarea);
+    setEsEditar(!!tarea); // Es editar si hay una tarea existente
+    setModalVisible(true);
   };
 
-  // Mostrar el modal para editar una tarea
-  const handleEditarTarea = (tarea: Tarea) => {
-    // Definir tipo 'Tarea' explícitamente
-    setTareaActual(tarea); // Cargamos la tarea actual
-    setEsEditar(true); // Modo edición
-    setModalVisible(true); // Mostrar el modal
-  };
-
-  // Función para cerrar el modal
   const handleCloseModal = () => {
     setModalVisible(false);
   };
 
-  if (cargando) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Cargando tareas...</Text>
-      </View>
-    );
-  }
-
   return (
-    <View style={{ flex: 1, backgroundColor: "white", padding: 16 }}>
-      <StyledText className="text-2xl font-bold text-dark mb-4">
-        Gestión de Tareas
-      </StyledText>
-
-      {tareas && tareas.length === 0 ? (
-        <StyledText className="text-dark/80">
-          No hay tareas disponibles
-        </StyledText>
-      ) : (
-        <FlatList
-          data={tareas}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <StyledPressable className="p-4 border-b border-gray-500">
-              <StyledText className="text-lg text-dark">
-                {item.nombre}
-              </StyledText>
-              <StyledText className="text-dark/80">
-                Materia: {item.materia}
-              </StyledText>
-              <StyledText className="text-dark/80">
-                Prioridad: {item.prioridad}
-              </StyledText>
-              <StyledText className="text-dark/80">
-                Fecha de Vencimiento: {item.fechaVencimiento}
-              </StyledText>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  marginTop: 10,
-                }}
-              >
-                <StyledPressable
-                  onPress={() => handleEditarTarea(item)} // Editar tarea
-                  className="px-4 py-2 rounded active:opacity-80"
-                >
-                  <EditIcon />
-                </StyledPressable>
-                <StyledPressable
-                  onPress={() => eliminarTarea(item.id)} // Eliminar tarea
-                  className="px-4 py-2 rounded active:opacity-80"
-                >
-                  <DeleteIcon />
-                </StyledPressable>
-              </View>
-            </StyledPressable>
-          )}
+    <View style={styles.container}>
+      <Header
+        fechaSeleccionada={fechaSeleccionada}
+        setFechaSeleccionada={setFechaSeleccionada}
+      />
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <ListaTareas
+          fechaSeleccionada={fechaSeleccionada}
+          handleAbrirModal={handleAbrirModal}
         />
-      )}
-
-      <StyledPressable
-        onPress={handleAgregarTarea} // Agregar nueva tarea
-        className="bg-gray-200 w-16 h-16 rounded-full active:opacity-80 flex items-center justify-center absolute bottom-8 right-8"
-      >
-        <AddIcon />
-      </StyledPressable>
-
-      {/* Modal para agregar o editar tarea */}
+      </ScrollView>
+      <View style={styles.botonContainer}>
+        <BotonAgregarTarea onPress={() => handleAbrirModal(undefined)} />
+      </View>
       {modalVisible && (
         <FormularioTareaModal
           visible={modalVisible}
           onClose={handleCloseModal}
-          tareaInicial={tareaActual} // Pasa la tarea actual si estamos editando
-          esEditar={esEditar} // Define si es edición o agregado
+          tareaInicial={tareaActual} // tareaActual puede ser undefined
+          esEditar={esEditar}
         />
       )}
     </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "white",
+    padding: 10,
+  },
+  header: {
+    paddingTop: 30, // Espacio en la parte superior del encabezado
+    paddingBottom: 10, // Espacio en la parte inferior del encabezado
+    backgroundColor: "white", // Asegúrate de que el fondo del encabezado coincida
+  },
+  scrollViewContent: {
+    paddingBottom: 80, // Ajustar el espacio para que no se cubra el botón
+  },
+  botonContainer: {
+    justifyContent: "flex-end",
+    alignItems: "flex-end",
+    padding: 5, // Espacio alrededor del botón
+  },
+});
+
+const Index = () => {
+  return (
+    <TareasProvider>
+      <GestionTareas />
+    </TareasProvider>
+  );
+};
+
+export default Index;

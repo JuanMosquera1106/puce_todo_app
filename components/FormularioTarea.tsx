@@ -3,10 +3,10 @@ import {
   ScrollView,
   Text,
   TextInput,
-  Button,
   View,
   Pressable,
   Modal,
+  Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -21,12 +21,14 @@ import {
   RememberIcon,
   TimeIcon,
   CloseIcon,
+  AceptIcon,
 } from "../components/Icons";
+import moment from "moment";
+
 
 // Componentes estilizados
 const StyledView = styled(View);
 const StyledText = styled(Text);
-const StyledButton = styled(Button);
 const StyledTextInput = styled(TextInput);
 const StyledPressable = styled(Pressable);
 const StyledScrollView = styled(ScrollView);
@@ -48,6 +50,7 @@ export default function FormularioTareaModal({
 }) {
   const { agregarTarea, actualizarTarea } = useTareas();
 
+  // Estados iniciales con valores predeterminados
   const [tareaNombre, setTareaNombre] = useState(tareaInicial?.nombre || "");
   const [tareaPrioridad, setTareaPrioridad] = useState<
     "Baja" | "Media" | "Alta"
@@ -56,22 +59,24 @@ export default function FormularioTareaModal({
     tareaInicial?.materia || "Ninguna",
   );
   const [tareaFechaVencimiento, setTareaFechaVencimiento] = useState(
-    tareaInicial?.fechaVencimiento || "",
+    tareaInicial?.fechaVencimiento || new Date().toLocaleDateString("en-EC"), // Formato local "YYYY-MM-DD"
   );
+
   const [repetirFrecuencia, setRepetirFrecuencia] = useState<string | null>(
     tareaInicial?.repetir || null,
   );
   const [pomodoroConfig, setPomodoroConfig] = useState(
     tareaInicial?.pomodoro || {
-      duracion: 25,
+      duracion: 25, // Valores por defecto
       descanso: 5,
-      intervalo: 4,
+      intervalo: 1,
     },
   );
   const [recordatorio, setRecordatorio] = useState<{
     hora: string;
     tipo: string;
   } | null>(tareaInicial?.recordatorio || null);
+
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [mostrarNotificacion, setMostrarNotificacion] = useState<
     "Pomodoro" | "Recordatorios" | "Repetir" | "Prioridad" | null
@@ -80,12 +85,30 @@ export default function FormularioTareaModal({
   const handleDateChange = (event: any, selectedDate: Date | undefined) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      const formattedDate = selectedDate.toISOString().split("T")[0];
+      const formattedDate = moment(selectedDate)
+        .startOf('day')  // Establecer la hora a las 00:00:00
+        .format('YYYY-MM-DD');  // Formato ISO o cualquier formato que prefieras
+      
       setTareaFechaVencimiento(formattedDate);
     }
   };
+  
 
+  // Validar que el nombre de la tarea no esté vacío y que no exceda los 200 caracteres
   const handleGuardarTarea = () => {
+    if (!tareaNombre.trim()) {
+      Alert.alert("Error", "El nombre de la tarea es obligatorio."); // Mostrar alerta si el nombre está vacío
+      return;
+    }
+
+    if (tareaNombre.length > 200) {
+      Alert.alert(
+        "Error",
+        "El nombre de la tarea no debe exceder los 200 caracteres.",
+      ); // Mostrar alerta si el nombre excede los 200 caracteres
+      return;
+    }
+
     const tarea: Tarea = {
       id: esEditar && tareaInicial ? tareaInicial.id : generateId(),
       nombre: tareaNombre,
@@ -118,18 +141,19 @@ export default function FormularioTareaModal({
           flex: 1,
           justifyContent: "center",
           backgroundColor: "rgba(0, 0, 0, 0.5)",
-        }} // Fondo oscurecido
-        onPress={onClose} // Cierra el modal al hacer clic fuera del contenido visible
+        }}
+        onPress={onClose}
       >
-        <StyledView className="flex-1 justify-end items-center bg-opacity-500">
-          <StyledView
-            className="bg-white p-6 border border-gray-300 rounded-lg w-[99%]"
-            onStartShouldSetResponder={() => true}
-          >
+        <StyledView
+          className="flex-1 justify-end items-center bg-opacity-500"
+          onStartShouldSetResponder={() => true} // Para evitar cerrar el modal al hacer clic en su contenido
+        >
+          <StyledView className="bg-white p-6 border border-gray-300 rounded-lg w-[99%]">
             <StyledText className="text-2xl mb-4">
               {esEditar ? "Editar Tarea" : "Agregar Tarea"}
             </StyledText>
 
+            {/* Materia */}
             <StyledText className="text-lg">Materia</StyledText>
             <StyledView className="border border-gray-300 rounded-md my-1 p-1">
               <Picker
@@ -143,6 +167,7 @@ export default function FormularioTareaModal({
               </Picker>
             </StyledView>
 
+            {/* Nombre de la Tarea */}
             <StyledText className="text-lg">Nombre de la Tarea</StyledText>
             <StyledTextInput
               className="border border-gray-300 rounded-md p-3 my-2"
@@ -151,59 +176,35 @@ export default function FormularioTareaModal({
               placeholder="Nombre de la tarea"
             />
 
-            {/* Fila de opciones con scroll horizontal */}
+            {/* Opciones adicionales (Pomodoro, Recordatorio, Prioridad) */}
             <StyledScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               className="my-4"
             >
               <StyledPressable
-                onPress={() => {
-                  if (mostrarNotificacion === "Pomodoro") {
-                    setMostrarNotificacion(null); // Cierra el modal
-                  } else {
-                    setMostrarNotificacion("Pomodoro"); // Abre el modal si haces clic por primera vez
-                  }
-                }}
+                onPress={() => setMostrarNotificacion("Pomodoro")}
                 className="mx-3"
               >
                 <TimeIcon />
               </StyledPressable>
 
               <StyledPressable
-                onPress={() => {
-                  if (mostrarNotificacion === "Recordatorios") {
-                    setMostrarNotificacion(null); // Cierra el modal si vuelves a hacer clic en el mismo ícono
-                  } else {
-                    setMostrarNotificacion("Recordatorios");
-                  }
-                }}
+                onPress={() => setMostrarNotificacion("Recordatorios")}
                 className="mx-3"
               >
                 <RememberIcon />
               </StyledPressable>
 
               <StyledPressable
-                onPress={() => {
-                  if (mostrarNotificacion === "Repetir") {
-                    setMostrarNotificacion(null); // Cierra el modal si vuelves a hacer clic en el mismo ícono
-                  } else {
-                    setMostrarNotificacion("Repetir");
-                  }
-                }}
+                onPress={() => setMostrarNotificacion("Repetir")}
                 className="mx-3"
               >
                 <RepeatIcon />
               </StyledPressable>
 
               <StyledPressable
-                onPress={() => {
-                  if (mostrarNotificacion === "Prioridad") {
-                    setMostrarNotificacion(null); // Cierra el modal si vuelves a hacer clic en el mismo ícono
-                  } else {
-                    setMostrarNotificacion("Prioridad");
-                  }
-                }}
+                onPress={() => setMostrarNotificacion("Prioridad")}
                 className="mx-3"
               >
                 <PriorityIcon />
@@ -217,6 +218,7 @@ export default function FormularioTareaModal({
               </StyledPressable>
             </StyledScrollView>
 
+            {/* DateTimePicker para la fecha */}
             {showDatePicker && (
               <DateTimePicker
                 value={new Date()}
@@ -226,7 +228,7 @@ export default function FormularioTareaModal({
               />
             )}
 
-            {/* Modal para gestionar las notificaciones */}
+            {/* Modales para las configuraciones */}
             {mostrarNotificacion && (
               <Modal
                 transparent={true}
@@ -239,23 +241,23 @@ export default function FormularioTareaModal({
                     flex: 1,
                     justifyContent: "center",
                     backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  }} // Fondo oscurecido
-                  onPress={onClose} // Cierra el modal al hacer clic fuera del contenido visible
+                  }}
+                  onPress={() => setMostrarNotificacion(null)}
                 >
                   <StyledView className="flex-1 mb-[120px] justify-end items-center bg-opacity-10">
                     <StyledView
                       className="bg-white p-6 border border-gray-300 rounded-lg w-4/5 relative"
                       onStartShouldSetResponder={() => true}
                     >
-                      {/* Botón de cierre en la esquina superior derecha */}
+                      {/* Cerrar el modal */}
                       <StyledPressable
-                        onPress={() => setMostrarNotificacion(null)} // Cierra el modal al hacer clic en la X
+                        onPress={() => setMostrarNotificacion(null)}
                         className="absolute top-4 right-4"
                       >
                         <CloseIcon />
                       </StyledPressable>
 
-                      {/* Pomodoro Modal */}
+                      {/* Configuraciones según la selección (Pomodoro, Prioridad, etc.) */}
                       {mostrarNotificacion === "Pomodoro" && (
                         <StyledView>
                           <StyledText className="text-lg mb-4">
@@ -288,7 +290,6 @@ export default function FormularioTareaModal({
                         </StyledView>
                       )}
 
-                      {/* Recordatorios Modal */}
                       {mostrarNotificacion === "Recordatorios" && (
                         <StyledView>
                           <StyledText className="text-lg mb-4">
@@ -323,7 +324,6 @@ export default function FormularioTareaModal({
                         </StyledView>
                       )}
 
-                      {/* Repetir Modal */}
                       {mostrarNotificacion === "Repetir" && (
                         <StyledView>
                           <StyledText className="text-lg mb-4">
@@ -346,7 +346,6 @@ export default function FormularioTareaModal({
                         </StyledView>
                       )}
 
-                      {/* Prioridad Modal */}
                       {mostrarNotificacion === "Prioridad" && (
                         <StyledView>
                           <StyledText className="text-lg mb-4">
@@ -370,10 +369,13 @@ export default function FormularioTareaModal({
               </Modal>
             )}
 
-            <StyledButton
-              title={esEditar ? "Guardar Cambios" : "Agregar Tarea"}
+            {/* Botón para guardar la tarea */}
+            <StyledPressable
+              className="absolute top-4 right-4"
               onPress={handleGuardarTarea}
-            />
+            >
+              <AceptIcon />
+            </StyledPressable>
           </StyledView>
         </StyledView>
       </StyledPressable>

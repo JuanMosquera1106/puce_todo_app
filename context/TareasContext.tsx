@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useCallback } from "react";
 import { Tarea } from "../interfaces/Tarea";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // Para almacenamiento persistente
 
@@ -23,6 +23,7 @@ export const useTareas = () => {
 export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const [cargando, setCargando] = useState(true); // Estado de carga
+  const [intentoCargar, setIntentoCargar] = useState(false); // Controlar múltiples cargas
 
   // Guardar tareas en AsyncStorage
   const guardarTareasEnStorage = async (nuevasTareas: Tarea[]) => {
@@ -33,8 +34,9 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Cargar tareas desde AsyncStorage
-  const cargarTareasDesdeStorage = async () => {
+  // Memorizar cargarTareasDesdeStorage para evitar múltiples renderizados innecesarios
+  const cargarTareasDesdeStorage = useCallback(async () => {
+    if (intentoCargar) return; // Evitar múltiples cargas
     try {
       const tareasGuardadas = await AsyncStorage.getItem("tareas");
       if (tareasGuardadas) {
@@ -44,13 +46,14 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Error cargando las tareas", e);
     } finally {
       setCargando(false); // Deja de cargar cuando finaliza
+      setIntentoCargar(true); // Marcar como intentado
     }
-  };
+  }, [intentoCargar]); // Dependencia para evitar recargar si ya se intentó cargar
 
   // Cargar tareas cuando se monta el componente
   React.useEffect(() => {
     cargarTareasDesdeStorage();
-  }, []);
+  }, [cargarTareasDesdeStorage]); // Incluir la función en el array de dependencias
 
   const agregarTarea = (tarea: Tarea) => {
     const nuevasTareas = [...tareas, tarea];

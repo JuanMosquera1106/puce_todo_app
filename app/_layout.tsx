@@ -1,26 +1,26 @@
+import React from "react";
 import { View } from "react-native";
-import { Stack } from "expo-router";
-import { styled } from "nativewind"; // Usamos NativeWind para aplicar clases
-import { Logo } from "../components/Logo";
-import { CircleInfoIcon } from "../components/Icons";
+import { Tabs } from "expo-router";
+import TabBar from "../components/TabBar";
 import { TareasProvider } from "../context/TareasContext";
 
-const StyledView = styled(View);
-
-export default function Layout() {
+const _layout = () => {
   return (
-    <StyledView className="flex-1 bg-black">
-      <TareasProvider>
-        <Stack
-          screenOptions={{
-            headerStyle: { backgroundColor: "black" },
-            headerTintColor: "white", // Color de texto en el header
-            headerTitle: "",
-            headerLeft: () => <Logo />,
-            headerRight: () => <CircleInfoIcon />,
-          }}
-        />
-      </TareasProvider>
-    </StyledView>
+    <TareasProvider>
+      <View style={{ flex: 1 }}>
+        <Tabs tabBar={(props) => <TabBar {...props} />}>
+          {/* Ocultar el título y el espacio superior para la pestaña "Home" */}
+          <Tabs.Screen
+            name="(tareas)/index"
+            options={{ title: "Home", headerShown: false }}
+          />
+          <Tabs.Screen name="calendar" options={{ title: "Calendario" }} />
+          <Tabs.Screen name="timer" options={{ title: "Cronómetro" }} />
+          <Tabs.Screen name="performance" options={{ title: "Rendimiento" }} />
+        </Tabs>
+      </View>
+    </TareasProvider>
   );
-}
+};
+
+export default _layout;

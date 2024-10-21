@@ -14,7 +14,7 @@
     "scheme": "puceapp",  // Añadimos el scheme para deep linking
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.puce.todoapp"  // Añadir un identificador de paquete único para iOS
+      "bundleIdentifier": "com.todoapp"  // Añadir un identificador de paquete único para iOS
     },
     "android": {
       "package": "com.puce.todoapp",  // Añadir un identificador de paquete único para Android
