@@ -35,7 +35,8 @@
     "react-native-screens": "3.31.1",
     "react-native-wheel-picker-android": "^2.0.6",
     "tailwind-rn": "^4.2.0",
-    "yup": "^1.4.0"
+    "yup": "^1.4.0",
+    "expo-av": "~14.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
