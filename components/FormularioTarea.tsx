@@ -25,7 +25,6 @@ import {
 } from "../components/Icons";
 import moment from "moment";
 
-
 // Componentes estilizados
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -59,7 +58,7 @@ export default function FormularioTareaModal({
     tareaInicial?.materia || "Ninguna",
   );
   const [tareaFechaVencimiento, setTareaFechaVencimiento] = useState(
-    tareaInicial?.fechaVencimiento || new Date().toLocaleDateString("en-EC"), // Formato local "YYYY-MM-DD"
+    tareaInicial?.fechaVencimiento || new Date().toLocaleDateString("en-CA"), // Formato local "YYYY-MM-DD"
   );
 
   const [repetirFrecuencia, setRepetirFrecuencia] = useState<string | null>(
@@ -86,13 +85,12 @@ export default function FormularioTareaModal({
     setShowDatePicker(false);
     if (selectedDate) {
       const formattedDate = moment(selectedDate)
-        .startOf('day')  // Establecer la hora a las 00:00:00
-        .format('YYYY-MM-DD');  // Formato ISO o cualquier formato que prefieras
-      
+        .startOf("day") // Establecer la hora a las 00:00:00
+        .format("YYYY-MM-DD"); // Formato ISO o cualquier formato que prefieras
+
       setTareaFechaVencimiento(formattedDate);
     }
   };
-  
 
   // Validar que el nombre de la tarea no esté vacío y que no exceda los 200 caracteres
   const handleGuardarTarea = () => {
