@@ -7,10 +7,8 @@ import {
   ScrollView,
   TouchableOpacity,
   PanResponder,
-  Animated,
-  GestureResponderEvent,
-  PanResponderGestureState,
 } from "react-native";
+import Calendario from "../components/FiltroCalendario"; // Importa tu componente de calendario
 
 // Definición del estado de eventos con duración
 interface Event {
@@ -22,6 +20,10 @@ interface Event {
 
 interface Events {
   [time: string]: Event;
+}
+
+interface DayEvents {
+  [date: string]: Events;
 }
 
 // Horas del día con intervalos de 30 minutos
@@ -54,6 +56,11 @@ const timeBlocks = [
   "8:30 p. m.",
   "9:00 p. m.",
   "9:30 p. m.",
+  "10:00 p. m.",
+  "10:30 p. m.",
+  "11:00 p. m.",
+  "11:30 p. m.",
+  "12:00 a. m.",
 ];
 
 // Colores aleatorios para las materias
@@ -71,53 +78,113 @@ const getRandomColor = (): string => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
+const formatDate = (date: Date) => {
+  return date.toISOString().split('T')[0]; // Convierte la fecha en formato YYYY-MM-DD
+};
+
+const Header: React.FC<{
+  fechaSeleccionada: Date;
+  setFechaSeleccionada: (fecha: Date) => void;
+}> = ({ fechaSeleccionada, setFechaSeleccionada }) => {
+  return (
+    <View style={styles.header}>
+      <Calendario
+        fechaSeleccionada={fechaSeleccionada}
+        setFechaSeleccionada={setFechaSeleccionada}
+      />
+    </View>
+  );
+};
+
 const CalendarScreen: React.FC = () => {
-  const [events, setEvents] = useState<Events>({});
+  const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date()); // Nueva funcionalidad para manejar la fecha seleccionada
+  const [dayEvents, setDayEvents] = useState<DayEvents>({}); // Materias por cada día
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null); // Hora seleccionada para escribir
   const [draggingHeight, setDraggingHeight] = useState<number>(1); // Altura actual del bloque mientras se arrastra
+  const [startIndex, setStartIndex] = useState<number | null>(null); // Índice inicial del bloque
+
+  const formattedDate = formatDate(fechaSeleccionada); // Fecha formateada actual
+
+  // Obtener los eventos del día actual o un objeto vacío si no hay
+  const events = dayEvents[formattedDate] || {};
 
   // Manejar el cambio en la materia
   const handleInputChange = (time: string, text: string) => {
-    setEvents((prevEvents) => ({
-      ...prevEvents,
-      [time]: {
-        time,
-        event: text,
-        color: getRandomColor(),
-        duration: draggingHeight,
-      }, // Duración dinámica
-    }));
+    setDayEvents((prevDayEvents) => {
+      const updatedEvents = {
+        ...prevDayEvents[formattedDate],
+        [time]: {
+          time,
+          event: text,
+          color: getRandomColor(),
+          duration: draggingHeight,
+        },
+      };
+      return {
+        ...prevDayEvents,
+        [formattedDate]: updatedEvents, // Actualizar solo el día seleccionado
+      };
+    });
   };
 
   // Manejar el clic en el bloque de hora
-  const handleBlockClick = (time: string) => {
+  const handleBlockClick = (time: string, index: number) => {
     setSelectedBlock(time); // Seleccionar el bloque de tiempo para ingresar la materia
+    setStartIndex(index); // Guardar el índice del bloque inicial
   };
 
-  const handlePanResponderMove = (
-    e: GestureResponderEvent,
-    gestureState: PanResponderGestureState,
-  ) => {
+  // Manejar el movimiento del PanResponder
+  const handlePanResponderMove = (e: any, gestureState: any) => {
     const blockHeight = 60; // Altura fija de cada bloque en píxeles (corresponde a 30 minutos)
-    const draggedBlocks = Math.ceil(gestureState.dy / blockHeight); // Calcula cuántos bloques de 30 minutos se arrastraron
-    setDraggingHeight(Math.max(1, draggedBlocks)); // Asegura que sea al menos 1 bloque
+    const draggedBlocks = Math.round(gestureState.dy / blockHeight); // Calcula cuántos bloques de 30 minutos se arrastraron
+
+    // Calcula la nueva altura y permite que se reduzca, pero nunca por debajo de 1 bloque
+    const newHeight = Math.max(1, draggingHeight + draggedBlocks);
+    setDraggingHeight(newHeight);
+  };
+
+  // Manejar cuando se suelta el bloque
+  const handlePanResponderRelease = () => {
+    if (selectedBlock !== null && startIndex !== null) {
+      setDayEvents((prevDayEvents) => {
+        const updatedEvents = { ...prevDayEvents[formattedDate] };
+        const timeKey = timeBlocks[startIndex];
+
+        // Comprobar si hay un evento existente y actualizar la duración
+        if (updatedEvents[timeKey]) {
+          const updatedDuration = Math.max(1, draggingHeight); // Mantener al menos 1 bloque
+          updatedEvents[timeKey] = {
+            ...updatedEvents[timeKey],
+            duration: updatedDuration,
+          };
+        }
+
+        return {
+          ...prevDayEvents,
+          [formattedDate]: updatedEvents, // Actualizar solo el día seleccionado
+        };
+      });
+    }
+    setDraggingHeight(1);
+    setStartIndex(null);
+    setSelectedBlock(null);
   };
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onPanResponderMove: handlePanResponderMove,
-    onPanResponderRelease: () => {
-      // Al soltar, guarda la duración
-      setDraggingHeight(1); // Reinicia la altura para el próximo arrastre
-    },
+    onPanResponderRelease: handlePanResponderRelease,
   });
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Horario</Text>
-      </View>
+      {/* Header con el calendario */}
+      <Header
+        fechaSeleccionada={fechaSeleccionada}
+        setFechaSeleccionada={setFechaSeleccionada}
+      />
 
+      {/* Contenido del calendario de bloques */}
       <ScrollView>
         <View style={styles.scheduleContainer}>
           {/* Primera columna: Horas */}
@@ -142,15 +209,15 @@ const CalendarScreen: React.FC = () => {
                     styles.eventSlot,
                     event
                       ? {
-                          height: event.duration * 60,
+                          height: event.duration * 60, // Ajusta la altura del bloque
                           backgroundColor: event.color,
                         }
-                      : {},
+                      : { height: 60 }, // Altura base para bloques vacíos
                   ]}
-                  onPress={() => handleBlockClick(time)}
+                  onPress={() => handleBlockClick(time, index)}
                 >
                   {isSelected ? (
-                    <Animated.View style={{ height: draggingHeight * 60 }}>
+                    <View style={{ height: draggingHeight * 60 }}>
                       <TextInput
                         style={styles.input}
                         placeholder="Escribir materia"
@@ -167,7 +234,7 @@ const CalendarScreen: React.FC = () => {
                           <View style={styles.dragLine} />
                         </View>
                       </View>
-                    </Animated.View>
+                    </View>
                   ) : (
                     event && <Text style={styles.eventText}>{event.event}</Text>
                   )}
@@ -183,14 +250,18 @@ const CalendarScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5", paddingBottom: 20 },
-  header: { padding: 20, backgroundColor: "#ffffff", alignItems: "center" },
-  headerText: { color: "#000", fontSize: 18, fontWeight: "bold" },
+  header: {
+    paddingTop: 30, // Espacio en la parte superior del encabezado
+    paddingBottom: 10, // Espacio en la parte inferior del encabezado
+    backgroundColor: "white", // Asegúrate de que el fondo del encabezado coincida
+  },
   scheduleContainer: { flexDirection: "row", flex: 1, marginTop: 10 },
   timeColumn: { width: 100, paddingLeft: 20 },
   timeRow: {
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
-    paddingVertical: 10,
+    height: 60, // Ajusta la altura para que coincida con las materias
+    justifyContent: "center",
   },
   timeText: { color: "#000", fontSize: 16 },
   eventsColumn: { flex: 1, marginLeft: 10 },
@@ -199,6 +270,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#ccc",
     paddingVertical: 10,
     paddingHorizontal: 5,
+    position: "relative",
   },
   input: {
     backgroundColor: "#ffffff",
@@ -213,14 +285,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   dragHandle: {
-    marginTop: 10,
     backgroundColor: "#e0e0e0",
     padding: 5,
     alignItems: "center",
     borderRadius: 4,
     position: "absolute",
-    bottom: 5,
-    right: 5,
+    bottom: 0, // Asegura que siempre esté al final
+    right: 5, // Ajustar para la posición horizontal
   },
   dragIconContainer: {
     flexDirection: "column",
