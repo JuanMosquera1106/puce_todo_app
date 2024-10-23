@@ -24,6 +24,7 @@ import {
   AceptIcon,
 } from "../components/Icons";
 import moment from "moment";
+import Timer from "./Timer"; // Importar el componente Timer
 
 // Componentes estilizados
 const StyledView = styled(View);
@@ -81,6 +82,8 @@ export default function FormularioTareaModal({
     "Pomodoro" | "Recordatorios" | "Repetir" | "Prioridad" | null
   >(null);
 
+  const [mostrarTimer, setMostrarTimer] = useState(false); // Estado para mostrar el Timer
+
   const handleDateChange = (event: any, selectedDate: Date | undefined) => {
     setShowDatePicker(false);
     if (selectedDate) {
@@ -125,6 +128,16 @@ export default function FormularioTareaModal({
     }
 
     onClose();
+  };
+
+  // Función para manejar el guardado de la configuración del Pomodoro
+  const handleGuardarPomodoro = (config: {
+    duracion: number;
+    descanso: number;
+    intervalo: number;
+  }) => {
+    setPomodoroConfig(config);
+    setMostrarTimer(false); // Cerrar el modal del Timer después de guardar
   };
 
   return (
@@ -181,7 +194,7 @@ export default function FormularioTareaModal({
               className="my-4"
             >
               <StyledPressable
-                onPress={() => setMostrarNotificacion("Pomodoro")}
+                onPress={() => setMostrarTimer(true)} // Mostrar el Timer al hacer clic en el icono del reloj
                 className="mx-3"
               >
                 <TimeIcon />
@@ -226,145 +239,16 @@ export default function FormularioTareaModal({
               />
             )}
 
-            {/* Modales para las configuraciones */}
-            {mostrarNotificacion && (
-              <Modal
-                transparent={true}
-                visible={!!mostrarNotificacion}
-                animationType="fade"
-                onRequestClose={() => setMostrarNotificacion(null)}
-              >
-                <StyledPressable
-                  style={{
-                    flex: 1,
-                    justifyContent: "center",
-                    backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  }}
-                  onPress={() => setMostrarNotificacion(null)}
-                >
-                  <StyledView className="flex-1 mb-[120px] justify-end items-center bg-opacity-10">
-                    <StyledView
-                      className="bg-white p-6 border border-gray-300 rounded-lg w-4/5 relative"
-                      onStartShouldSetResponder={() => true}
-                    >
-                      {/* Cerrar el modal */}
-                      <StyledPressable
-                        onPress={() => setMostrarNotificacion(null)}
-                        className="absolute top-4 right-4"
-                      >
-                        <CloseIcon />
-                      </StyledPressable>
-
-                      {/* Configuraciones según la selección (Pomodoro, Prioridad, etc.) */}
-                      {mostrarNotificacion === "Pomodoro" && (
-                        <StyledView>
-                          <StyledText className="text-lg mb-4">
-                            Configurar Pomodoro
-                          </StyledText>
-                          <StyledTextInput
-                            className="border border-gray-300 rounded-md p-2 my-2"
-                            keyboardType="numeric"
-                            value={pomodoroConfig.duracion.toString()}
-                            onChangeText={(value) =>
-                              setPomodoroConfig({
-                                ...pomodoroConfig,
-                                duracion: parseInt(value, 10),
-                              })
-                            }
-                            placeholder="Duración del Pomodoro"
-                          />
-                          <StyledTextInput
-                            className="border border-gray-300 rounded-md p-2 my-2"
-                            keyboardType="numeric"
-                            value={pomodoroConfig.descanso.toString()}
-                            onChangeText={(value) =>
-                              setPomodoroConfig({
-                                ...pomodoroConfig,
-                                descanso: parseInt(value, 10),
-                              })
-                            }
-                            placeholder="Tiempo de Descanso"
-                          />
-                        </StyledView>
-                      )}
-
-                      {mostrarNotificacion === "Recordatorios" && (
-                        <StyledView>
-                          <StyledText className="text-lg mb-4">
-                            Configurar Recordatorio
-                          </StyledText>
-                          <StyledTextInput
-                            className="border border-gray-300 rounded-md p-2 my-2"
-                            placeholder="HH:MM"
-                            value={recordatorio?.hora || ""}
-                            onChangeText={(value) =>
-                              setRecordatorio({
-                                ...recordatorio,
-                                hora: value || "",
-                                tipo: recordatorio?.tipo || "Diario",
-                              })
-                            }
-                          />
-                          <Picker
-                            selectedValue={recordatorio?.tipo || "Diario"}
-                            onValueChange={(value) =>
-                              setRecordatorio({
-                                ...recordatorio,
-                                tipo: value,
-                                hora: recordatorio?.hora || "",
-                              })
-                            }
-                          >
-                            <Picker.Item label="Diario" value="Diario" />
-                            <Picker.Item label="Semanal" value="Semanal" />
-                            <Picker.Item label="Mensual" value="Mensual" />
-                          </Picker>
-                        </StyledView>
-                      )}
-
-                      {mostrarNotificacion === "Repetir" && (
-                        <StyledView>
-                          <StyledText className="text-lg mb-4">
-                            Configurar Repetición
-                          </StyledText>
-                          <Picker
-                            selectedValue={repetirFrecuencia || "No repetir"}
-                            onValueChange={(value) =>
-                              setRepetirFrecuencia(value)
-                            }
-                          >
-                            <Picker.Item
-                              label="No repetir"
-                              value="No repetir"
-                            />
-                            <Picker.Item label="Diario" value="Diario" />
-                            <Picker.Item label="Semanal" value="Semanal" />
-                            <Picker.Item label="Mensual" value="Mensual" />
-                          </Picker>
-                        </StyledView>
-                      )}
-
-                      {mostrarNotificacion === "Prioridad" && (
-                        <StyledView>
-                          <StyledText className="text-lg mb-4">
-                            Configurar Prioridad
-                          </StyledText>
-                          <Picker
-                            selectedValue={tareaPrioridad}
-                            onValueChange={(
-                              itemValue: "Baja" | "Media" | "Alta",
-                            ) => setTareaPrioridad(itemValue)}
-                          >
-                            <Picker.Item label="Baja" value="Baja" />
-                            <Picker.Item label="Media" value="Media" />
-                            <Picker.Item label="Alta" value="Alta" />
-                          </Picker>
-                        </StyledView>
-                      )}
-                    </StyledView>
-                  </StyledView>
-                </StyledPressable>
-              </Modal>
+            {/* Modal del Timer */}
+            {mostrarTimer && (
+              <Timer
+                visible={mostrarTimer}
+                onSave={handleGuardarPomodoro} // Guardar la configuración del Pomodoro
+                onClose={() => setMostrarTimer(false)} // Cerrar el Timer sin guardar
+                duracionInicial={pomodoroConfig.duracion}
+                descansoInicial={pomodoroConfig.descanso}
+                intervaloInicial={pomodoroConfig.intervalo}
+              />
             )}
 
             {/* Botón para guardar la tarea */}

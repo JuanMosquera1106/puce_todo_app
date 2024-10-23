@@ -10,6 +10,7 @@ import { Tarea } from "../interfaces/Tarea";
 interface ListaTareasProps {
   fechaSeleccionada: Date;
   handleAbrirModal: (tarea: Tarea) => void;
+  handleIniciarCronometro: (tarea: Tarea) => void; // Añadir la función para iniciar el cronómetro
 }
 
 // Asignar valores numéricos a las prioridades para ordenarlas
@@ -22,6 +23,7 @@ const prioridadValor: Record<"Alta" | "Media" | "Baja", number> = {
 const ListaTareas: React.FC<ListaTareasProps> = ({
   fechaSeleccionada,
   handleAbrirModal,
+  handleIniciarCronometro, // Recibir la función del cronómetro como prop
 }) => {
   const { tareas, cargando, eliminarTarea } = useTareas();
   const [tareasFiltradas, setTareasFiltradas] = useState<Tarea[]>([]); // Definir tipo de tareasFiltradas
@@ -64,6 +66,7 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
             tarea={item}
             onEdit={() => handleAbrirModal(item)}
             onDelete={() => eliminarTarea(item.id)}
+            onPlay={() => handleIniciarCronometro(item)} // Añadir la funcionalidad del cronómetro
           />
         ))
       )}

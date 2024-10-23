@@ -1,9 +1,10 @@
-import React, { useState } from "react"; // Importar useState
-import { ScrollView, View, StyleSheet } from "react-native"; // Importar ScrollView
+import React, { useState } from "react";
+import { ScrollView, View, StyleSheet, Modal } from "react-native"; // Importar Modal
 import Calendario from "../../components/FiltroCalendario";
 import ListaTareas from "../../components/ListaTareas";
 import BotonAgregarTarea from "../../components/BotonAgregarTarea";
 import FormularioTareaModal from "../../components/FormularioTarea";
+import Cronometro from "../../components/Cronometro"; // Importamos el cronómetro
 import { Tarea } from "../../interfaces/Tarea"; // Importar la interfaz Tarea
 import { TareasProvider } from "../../context/TareasContext"; // Asegúrate de que la ruta sea correcta
 
@@ -26,6 +27,8 @@ const GestionTareas: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [tareaActual, setTareaActual] = useState<Tarea | undefined>(undefined); // Usar undefined en lugar de null
   const [esEditar, setEsEditar] = useState(false);
+  const [mostrarCronometro, setMostrarCronometro] = useState(false); // Controla si el cronómetro está visible
+  const [tareaCronometro, setTareaCronometro] = useState<Tarea | undefined>(undefined); // Tarea para el cronómetro
 
   const handleAbrirModal = (tarea: Tarea | undefined) => {
     setTareaActual(tarea);
@@ -35,6 +38,15 @@ const GestionTareas: React.FC = () => {
 
   const handleCloseModal = () => {
     setModalVisible(false);
+  };
+
+  const handleIniciarCronometro = (tarea: Tarea) => {
+    setTareaCronometro(tarea); // Guardar la tarea que tendrá el cronómetro
+    setMostrarCronometro(true); // Mostrar el cronómetro
+  };
+
+  const handleCerrarCronometro = () => {
+    setMostrarCronometro(false); // Cierra el cronómetro y vuelve a la lista
   };
 
   return (
@@ -47,6 +59,7 @@ const GestionTareas: React.FC = () => {
         <ListaTareas
           fechaSeleccionada={fechaSeleccionada}
           handleAbrirModal={handleAbrirModal}
+          handleIniciarCronometro={handleIniciarCronometro} // Pasamos la función de iniciar cronómetro
         />
       </ScrollView>
       <View style={styles.botonContainer}>
@@ -59,6 +72,19 @@ const GestionTareas: React.FC = () => {
           tareaInicial={tareaActual} // tareaActual puede ser undefined
           esEditar={esEditar}
         />
+      )}
+
+      {/* Modal para mostrar el cronómetro */}
+      {mostrarCronometro && (
+        <Modal visible={mostrarCronometro} animationType="slide" transparent={true}>
+          <Cronometro
+            duracion={tareaCronometro?.pomodoro?.duracion || 25} // Asigna la duración de la tarea
+            descanso={tareaCronometro?.pomodoro?.descanso || 5} // Asigna el descanso de la tarea
+            intervalos={tareaCronometro?.pomodoro?.intervalo || 4} // Asigna los intervalos de la tarea
+            onFinish={handleCerrarCronometro} // Al finalizar, cerrar el cronómetro
+            onRegresar={handleCerrarCronometro} // Añadimos la opción para cerrar y regresar al listado de tareas
+          />
+        </Modal>
       )}
     </View>
   );

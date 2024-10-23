@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { styled } from "nativewind";
-import { DeleteIcon } from "../components/Icons";
+import { DeleteIcon, PlayIcon } from "../components/Icons"; // Importar el ícono de Play
 import { Tarea } from "../interfaces/Tarea";
 
 // Crear una versión estilizada de `Pressable` y `Text`
@@ -27,9 +27,10 @@ interface TareaCardProps {
   tarea: Tarea;
   onEdit: () => void;
   onDelete: () => void;
+  onPlay: () => void; // Añadimos una nueva prop para manejar la acción de "play"
 }
 
-const TareaCard: React.FC<TareaCardProps> = ({ tarea, onEdit, onDelete }) => {
+const TareaCard: React.FC<TareaCardProps> = ({ tarea, onEdit, onDelete, onPlay }) => {
   return (
     <StyledPressable
       className={`p-4 mb-4 border rounded-lg shadow flex-row justify-between items-center ${getCardStyle(
@@ -52,9 +53,17 @@ const TareaCard: React.FC<TareaCardProps> = ({ tarea, onEdit, onDelete }) => {
         </StyledText>
       </View>
 
+      {/* Botón de Play */}
+      <StyledPressable
+        onPress={onPlay}
+        className="ml-4 px-2 py-2 rounded active:opacity-80"
+      >
+        <PlayIcon />
+      </StyledPressable>
+
       <StyledPressable
         onPress={onDelete}
-        className="ml-auto px-1 py-1 rounded active:opacity-80"
+        className="ml-4 px-2 py-2 rounded active:opacity-80"
       >
         <DeleteIcon />
       </StyledPressable>

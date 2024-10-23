@@ -82,3 +82,8 @@ export const CloseIcon = (props: { size?: number; color?: string }) => (
 export const AceptIcon = (props: { size?: number; color?: string }) => (
   <FontAwesome name="check-circle" size={24} color="black" />
 );
+
+// Componente para el icono Play con FontAwesome6 (Nuevo)
+export const PlayIcon = (props: { size?: number; color?: string }) => (
+  <FontAwesome6 name="play" size={props.size || 24} color={props.color || "green"} />
+);
