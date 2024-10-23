@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Button, StyleSheet, Modal } from "react-native";
-import { Audio } from 'expo-av';
-import { BackHandler } from 'react-native';
+import { Audio } from "expo-av";
+import { BackHandler } from "react-native";
 
 interface CronometroProps {
   duracion: number;
@@ -11,7 +11,13 @@ interface CronometroProps {
   onRegresar: () => void;
 }
 
-const Cronometro: React.FC<CronometroProps> = ({ duracion, descanso, intervalos, onFinish, onRegresar }) => {
+const Cronometro: React.FC<CronometroProps> = ({
+  duracion,
+  descanso,
+  intervalos,
+  onFinish,
+  onRegresar,
+}) => {
   const [tiempoRestante, setTiempoRestante] = useState(duracion * 60);
   const [modoTrabajo, setModoTrabajo] = useState(true); // true: focus, false: break
   const [intervaloActual, setIntervaloActual] = useState(1);
@@ -23,18 +29,18 @@ const Cronometro: React.FC<CronometroProps> = ({ duracion, descanso, intervalos,
   // Cargar el sonido de la alarma
   const cargarSonido = async () => {
     try {
-      const { sound } = await Audio.Sound.createAsync(require('../assets/martian_soundtrack.mp3'));
+      const { sound } = await Audio.Sound.createAsync(
+        require("../assets/martian_soundtrack.mp3"),
+      );
       setSound(sound);
     } catch (error) {
       console.error("Error cargando el sonido", error);
     }
   };
 
-
   useEffect(() => {
     cargarSonido();
-  
- 
+
     return () => {
       if (sound) {
         sound.unloadAsync();
@@ -83,7 +89,7 @@ const Cronometro: React.FC<CronometroProps> = ({ duracion, descanso, intervalos,
   // Desactivar alarma y empezar el break o focus manualmente
   const desactivarAlarma = () => {
     if (sound) sound.stopAsync();
-    setShowAlarma(false);  // Ocultar la alarma
+    setShowAlarma(false); // Ocultar la alarma
 
     if (!modoTrabajo) {
       // Si estamos al final del break, mostrar opción de iniciar manualmente el próximo focus
@@ -125,28 +131,31 @@ const Cronometro: React.FC<CronometroProps> = ({ duracion, descanso, intervalos,
     }
   };
 
-// Función para manejar el botón físico "Atrás"
-useEffect(() => {
-  const backAction = () => {
-    setShowModal(true); // Mostrar modal de confirmación al presionar atrás
-    return true; // Esto previene la acción predeterminada de "atrás"
-  };
+  // Función para manejar el botón físico "Atrás"
+  useEffect(() => {
+    const backAction = () => {
+      setShowModal(true); // Mostrar modal de confirmación al presionar atrás
+      return true; // Esto previene la acción predeterminada de "atrás"
+    };
 
-  const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction,
+    );
 
-  return () => backHandler.remove(); // Eliminar el listener al desmontar el componente
-}, []);
-  
+    return () => backHandler.remove(); // Eliminar el listener al desmontar el componente
+  }, []);
 
   return (
     <View style={styles.container}>
       <Text style={styles.timer}>{formatearTiempo(tiempoRestante)}</Text>
-      <Text style={styles.modo}>
-        {mostrarModoYIntervalo()}
-      </Text>
+      <Text style={styles.modo}>{mostrarModoYIntervalo()}</Text>
 
       <View style={styles.controls}>
-        <Button title={activo ? "Pausar" : "Iniciar"} onPress={activo ? pausarCronometro : iniciarCronometro} />
+        <Button
+          title={activo ? "Pausar" : "Iniciar"}
+          onPress={activo ? pausarCronometro : iniciarCronometro}
+        />
         <Button title="Resetear" onPress={resetearCronometro} />
       </View>
 
@@ -158,7 +167,9 @@ useEffect(() => {
       {showAlarma && (
         <Modal visible={showAlarma} animationType="slide" transparent={true}>
           <View style={styles.alarmaContainer}>
-            <Text style={styles.alarmaText}>{modoTrabajo ? "Fin de Focus" : "Fin del Break"}</Text>
+            <Text style={styles.alarmaText}>
+              {modoTrabajo ? "Fin de Focus" : "Fin del Break"}
+            </Text>
             <Button title="Desactivar Alarma" onPress={desactivarAlarma} />
           </View>
         </Modal>
@@ -169,7 +180,9 @@ useEffect(() => {
         <Modal visible={showModal} animationType="fade" transparent={true}>
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalText}>¿Deseas volver al inicio? El cronómetro se reiniciará.</Text>
+              <Text style={styles.modalText}>
+                ¿Deseas volver al inicio? El cronómetro se reiniciará.
+              </Text>
               <View style={styles.modalButtons}>
                 <Button title="Cancelar" onPress={() => setShowModal(false)} />
                 <Button title="Confirmar" onPress={confirmarVolver} />

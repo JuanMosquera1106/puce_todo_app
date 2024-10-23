@@ -14,6 +14,9 @@ import { Platform } from "react-native";
 import { styled } from "nativewind";
 import { Tarea } from "../interfaces/Tarea";
 import { useTareas } from "../context/TareasContext";
+import { useCalendar } from "../context/CalendarContext";
+import { Materia } from "../interfaces/Materia";
+
 import {
   PriorityIcon,
   CalendarIcon,
@@ -59,8 +62,8 @@ export default function FormularioTareaModal({
     tareaInicial?.materia || "Ninguna",
   );
   const [tareaFechaVencimiento, setTareaFechaVencimiento] = useState(
-    tareaInicial?.fechaVencimiento || new Date().toLocaleDateString("en-CA"), // Formato local "YYYY-MM-DD"
-  );
+    tareaInicial?.fechaVencimiento || new Date().toLocaleDateString("en-CA"),
+  ); // Formato local "YYYY-MM-DD"
 
   const [repetirFrecuencia, setRepetirFrecuencia] = useState<string | null>(
     tareaInicial?.repetir || null,
@@ -95,18 +98,18 @@ export default function FormularioTareaModal({
     }
   };
 
-  // Validar que el nombre de la tarea no esté vacío y que no exceda los 200 caracteres
+  const { dayEvents } = useCalendar(); // Usar el hook correctamente
+
+  // Extraer la lista de materias desde los eventos del contexto
+  const materiasDisponibles = Object.values(dayEvents).flatMap(
+    (events) =>
+      Object.values(events).map((materia) => (materia as Materia).event), // Asegúrate de que el tipo sea Materia
+  );
+
+  // Validar que el nombre de la tarea no esté vacío y que no exceda los 50 caracteres
   const handleGuardarTarea = () => {
     if (!tareaNombre.trim()) {
       Alert.alert("Error", "El nombre de la tarea es obligatorio."); // Mostrar alerta si el nombre está vacío
-      return;
-    }
-
-    if (tareaNombre.length > 200) {
-      Alert.alert(
-        "Error",
-        "El nombre de la tarea no debe exceder los 200 caracteres.",
-      ); // Mostrar alerta si el nombre excede los 200 caracteres
       return;
     }
 
@@ -172,9 +175,9 @@ export default function FormularioTareaModal({
                 onValueChange={(itemValue) => setTareaMateria(itemValue)}
               >
                 <Picker.Item label="Ninguna" value="Ninguna" />
-                <Picker.Item label="Matemáticas" value="Matemáticas" />
-                <Picker.Item label="Historia" value="Historia" />
-                <Picker.Item label="Ciencias" value="Ciencias" />
+                {materiasDisponibles.map((materia, index) => (
+                  <Picker.Item key={index} label={materia} value={materia} />
+                ))}
               </Picker>
             </StyledView>
 
@@ -183,11 +186,15 @@ export default function FormularioTareaModal({
             <StyledTextInput
               className="border border-gray-300 rounded-md p-3 my-2"
               value={tareaNombre}
-              onChangeText={setTareaNombre}
+              onChangeText={(text) => {
+                if (text.length <= 50) {
+                  setTareaNombre(text); // Solo permitirá hasta 50 caracteres
+                }
+              }}
               placeholder="Nombre de la tarea"
             />
 
-            {/* Opciones adicionales (Pomodoro, Recordatorio, Prioridad) */}
+            {/* Opciones adicionales (Pomodoro, Recordatorio, Repetir, Prioridad) */}
             <StyledScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -249,6 +256,113 @@ export default function FormularioTareaModal({
                 descansoInicial={pomodoroConfig.descanso}
                 intervaloInicial={pomodoroConfig.intervalo}
               />
+            )}
+
+            {/* Modal para gestionar las notificaciones */}
+            {mostrarNotificacion && (
+              <Modal
+                transparent={true}
+                visible={!!mostrarNotificacion}
+                animationType="fade"
+                onRequestClose={() => setMostrarNotificacion(null)}
+              >
+                <StyledPressable
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  }}
+                  onPress={() => setMostrarNotificacion(null)}
+                >
+                  <StyledView className="flex-1 mb-[120px] justify-end items-center bg-opacity-10">
+                    <StyledView className="bg-white p-6 border border-gray-300 rounded-lg w-4/5 relative">
+                      <StyledPressable
+                        onPress={() => setMostrarNotificacion(null)}
+                        className="absolute top-4 right-4"
+                      >
+                        <CloseIcon />
+                      </StyledPressable>
+
+                      {/* Configuración de Recordatorios */}
+                      {mostrarNotificacion === "Recordatorios" && (
+                        <StyledView>
+                          <StyledText className="text-lg mb-4">
+                            Configurar Recordatorio
+                          </StyledText>
+                          <StyledTextInput
+                            className="border border-gray-300 rounded-md p-2 my-2"
+                            placeholder="HH:MM"
+                            value={recordatorio?.hora || ""}
+                            onChangeText={(value) =>
+                              setRecordatorio({
+                                ...recordatorio,
+                                hora: value || "",
+                                tipo: recordatorio?.tipo || "Diario",
+                              })
+                            }
+                          />
+                          <Picker
+                            selectedValue={recordatorio?.tipo || "Diario"}
+                            onValueChange={(value) =>
+                              setRecordatorio({
+                                ...recordatorio,
+                                tipo: value,
+                                hora: recordatorio?.hora || "",
+                              })
+                            }
+                          >
+                            <Picker.Item label="Diario" value="Diario" />
+                            <Picker.Item label="Semanal" value="Semanal" />
+                            <Picker.Item label="Mensual" value="Mensual" />
+                          </Picker>
+                        </StyledView>
+                      )}
+
+                      {/* Configuración de Repetir */}
+                      {mostrarNotificacion === "Repetir" && (
+                        <StyledView>
+                          <StyledText className="text-lg mb-4">
+                            Configurar Repetición
+                          </StyledText>
+                          <Picker
+                            selectedValue={repetirFrecuencia || "No repetir"}
+                            onValueChange={(value) =>
+                              setRepetirFrecuencia(value)
+                            }
+                          >
+                            <Picker.Item
+                              label="No repetir"
+                              value="No repetir"
+                            />
+                            <Picker.Item label="Diario" value="Diario" />
+                            <Picker.Item label="Semanal" value="Semanal" />
+                            <Picker.Item label="Mensual" value="Mensual" />
+                          </Picker>
+                        </StyledView>
+                      )}
+
+                      {/* Configuración de Prioridad */}
+                      {mostrarNotificacion === "Prioridad" && (
+                        <StyledView>
+                          <StyledText className="text-lg mb-4">
+                            Configurar Prioridad
+                          </StyledText>
+                          <Picker
+                            selectedValue={tareaPrioridad}
+                            onValueChange={(
+                              itemValue: "Baja" | "Media" | "Alta",
+                            ) => setTareaPrioridad(itemValue)}
+                          >
+                            <Picker.Item label="Baja" value="Baja" />
+                            <Picker.Item label="Media" value="Media" />
+                            <Picker.Item label="Alta" value="Alta" />
+                          </Picker>
+                        </StyledView>
+                      )}
+                    </StyledView>
+                  </StyledView>
+                </StyledPressable>
+              </Modal>
             )}
 
             {/* Botón para guardar la tarea */}

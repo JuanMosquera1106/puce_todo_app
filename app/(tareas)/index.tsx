@@ -28,7 +28,9 @@ const GestionTareas: React.FC = () => {
   const [tareaActual, setTareaActual] = useState<Tarea | undefined>(undefined); // Usar undefined en lugar de null
   const [esEditar, setEsEditar] = useState(false);
   const [mostrarCronometro, setMostrarCronometro] = useState(false); // Controla si el cronómetro está visible
-  const [tareaCronometro, setTareaCronometro] = useState<Tarea | undefined>(undefined); // Tarea para el cronómetro
+  const [tareaCronometro, setTareaCronometro] = useState<Tarea | undefined>(
+    undefined,
+  ); // Tarea para el cronómetro
 
   const handleAbrirModal = (tarea: Tarea | undefined) => {
     setTareaActual(tarea);
@@ -76,7 +78,11 @@ const GestionTareas: React.FC = () => {
 
       {/* Modal para mostrar el cronómetro */}
       {mostrarCronometro && (
-        <Modal visible={mostrarCronometro} animationType="slide" transparent={true}>
+        <Modal
+          visible={mostrarCronometro}
+          animationType="slide"
+          transparent={true}
+        >
           <Cronometro
             duracion={tareaCronometro?.pomodoro?.duracion || 25} // Asigna la duración de la tarea
             descanso={tareaCronometro?.pomodoro?.descanso || 5} // Asigna el descanso de la tarea

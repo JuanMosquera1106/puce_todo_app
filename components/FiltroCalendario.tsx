@@ -1,6 +1,6 @@
 import React from "react";
 import CalendarStrip from "react-native-calendar-strip";
-import moment from "moment";
+import moment from "moment-timezone"; // Asegúrate de instalar moment-timezone
 
 interface CalendarioProps {
   fechaSeleccionada: Date;
@@ -11,14 +11,15 @@ const FiltroCalendario: React.FC<CalendarioProps> = ({
   fechaSeleccionada,
   setFechaSeleccionada,
 }) => {
-  const today = moment(); // Fecha de hoy
+  const today = moment().tz("America/Guayaquil"); // Ajustar a la zona horaria de Ecuador
 
   return (
     <CalendarStrip
       style={{ height: 90, paddingTop: 10, paddingBottom: 10 }}
       selectedDate={fechaSeleccionada}
-      startingDate={moment(fechaSeleccionada).toDate()} // Convertir a Date nativo
-      onDateSelected={(date) => setFechaSeleccionada(moment(date).toDate())}
+      onDateSelected={(date: any) =>
+        setFechaSeleccionada(moment(date).toDate())
+      } // No modificamos la semana
       calendarHeaderStyle={{
         color: "black",
         fontSize: 16,
@@ -27,38 +28,26 @@ const FiltroCalendario: React.FC<CalendarioProps> = ({
       dateNumberStyle={{ color: "black", fontSize: 18 }}
       dateNameStyle={{ color: "gray", fontSize: 12 }}
       highlightDateNumberStyle={{
-        color: "red", // Color por defecto para fechas resaltadas
+        color: "red", // Color por defecto para la fecha seleccionada
         fontSize: 20,
       }}
       highlightDateNameStyle={{
-        color: "red", // Color por defecto para fechas resaltadas
+        color: "red", // Color por defecto para la fecha seleccionada
         fontSize: 14,
       }}
       customDatesStyles={[
         {
-          date: today, // La fecha de hoy
+          date: today, // Siempre azul y negrita para la fecha actual
           style: { backgroundColor: "transparent" },
           textStyle: {
-            color: "blue", // Azul para la fecha actual
+            color: "blue",
             fontSize: 20,
+            fontWeight: "bold",
           },
           textNameStyle: {
-            color: "blue", // Azul para el nombre de la fecha actual
+            color: "blue",
             fontSize: 14,
-          },
-        },
-        {
-          date: moment(fechaSeleccionada), // La fecha seleccionada
-          style: {
-            backgroundColor: "transparent",
-          },
-          textStyle: {
-            color: "red", // Rojo para la fecha seleccionada (si no es hoy)
-            fontSize: 20,
-          },
-          textNameStyle: {
-            color: "red", // Rojo para el nombre de la fecha seleccionada (si no es hoy)
-            fontSize: 14,
+            fontWeight: "bold",
           },
         },
       ]}

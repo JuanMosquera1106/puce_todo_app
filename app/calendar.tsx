@@ -8,23 +8,9 @@ import {
   TouchableOpacity,
   PanResponder,
 } from "react-native";
+import { useCalendar } from "../context/CalendarContext"; // Importa el contexto
 import Calendario from "../components/FiltroSemanal"; // Importa tu componente de calendario
-
-// Definición del estado de eventos con duración
-interface Event {
-  time: string;
-  event: string;
-  color: string;
-  duration: number; // duración en bloques
-}
-
-interface Events {
-  [time: string]: Event;
-}
-
-interface DayEvents {
-  [date: string]: Events;
-}
+import { Materia } from "../interfaces/Materia"; // Importa la interfaz Materia
 
 // Horas del día con intervalos de 30 minutos
 const timeBlocks = [
@@ -63,7 +49,7 @@ const timeBlocks = [
   "12:00 a. m.",
 ];
 
-// Colores aleatorios para las materias
+// Función para obtener un color aleatorio
 const getRandomColor = (): string => {
   const colors = [
     "#f28b82",
@@ -78,10 +64,12 @@ const getRandomColor = (): string => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
+// Formatear la fecha
 const formatDate = (date: Date) => {
   return date.toISOString().split("T")[0]; // Convierte la fecha en formato YYYY-MM-DD
 };
 
+// Componente Header
 const Header: React.FC<{
   fechaSeleccionada: Date;
   setFechaSeleccionada: (fecha: Date) => void;
@@ -96,20 +84,32 @@ const Header: React.FC<{
   );
 };
 
+// Componente principal CalendarScreen
 const CalendarScreen: React.FC = () => {
+  const { dayEvents, setDayEvents } = useCalendar(); // Usar el contexto
   const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date());
-  const [dayEvents, setDayEvents] = useState<DayEvents>({});
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
   const [draggingHeight, setDraggingHeight] = useState<number>(1);
   const [startIndex, setStartIndex] = useState<number | null>(null);
 
   const formattedDate = formatDate(fechaSeleccionada);
-  const events = dayEvents[formattedDate] || {};
+  const materias: { [key: string]: Materia } = dayEvents[formattedDate] || {}; // Asegúrate de que sea del tipo correcto
 
   // Manejar el cambio en la materia
   const handleInputChange = (time: string, text: string) => {
     setDayEvents((prevDayEvents) => {
-      const updatedEvents = {
+      // Si el texto está vacío, eliminamos la tarea
+      if (text.trim() === "") {
+        const updatedMaterias = { ...prevDayEvents[formattedDate] };
+        delete updatedMaterias[time]; // Eliminamos la tarea vacía
+        return {
+          ...prevDayEvents,
+          [formattedDate]: updatedMaterias,
+        };
+      }
+
+      // De lo contrario, actualizamos o creamos la tarea
+      const updatedMaterias: { [key: string]: Materia } = {
         ...prevDayEvents[formattedDate],
         [time]: {
           time,
@@ -120,7 +120,7 @@ const CalendarScreen: React.FC = () => {
       };
       return {
         ...prevDayEvents,
-        [formattedDate]: updatedEvents,
+        [formattedDate]: updatedMaterias,
       };
     });
   };
@@ -129,7 +129,7 @@ const CalendarScreen: React.FC = () => {
   const handleBlockClick = (time: string, index: number) => {
     setSelectedBlock(time);
     setStartIndex(index);
-    setDraggingHeight(events[time]?.duration || 1); // Usar la duración existente si hay un evento
+    setDraggingHeight(materias[time]?.duration || 1);
   };
 
   // Manejar el movimiento del PanResponder
@@ -144,17 +144,17 @@ const CalendarScreen: React.FC = () => {
   const handlePanResponderRelease = () => {
     if (selectedBlock !== null && startIndex !== null) {
       setDayEvents((prevDayEvents) => {
-        const updatedEvents = { ...prevDayEvents[formattedDate] };
+        const updatedMaterias = { ...prevDayEvents[formattedDate] };
         const timeKey = timeBlocks[startIndex];
 
-        // Actualiza la duración del evento
-        if (updatedEvents[timeKey]) {
-          updatedEvents[timeKey].duration = draggingHeight;
+        // Actualiza la duración de la materia
+        if (updatedMaterias[timeKey]) {
+          updatedMaterias[timeKey].duration = draggingHeight;
         }
 
         return {
           ...prevDayEvents,
-          [formattedDate]: updatedEvents,
+          [formattedDate]: updatedMaterias,
         };
       });
     }
@@ -186,7 +186,7 @@ const CalendarScreen: React.FC = () => {
           </View>
           <View style={styles.eventsColumn}>
             {timeBlocks.map((time, index) => {
-              const event = events[time];
+              const materia = materias[time];
               const isSelected = selectedBlock === time;
 
               return (
@@ -194,10 +194,10 @@ const CalendarScreen: React.FC = () => {
                   key={index}
                   style={[
                     styles.eventSlot,
-                    event
+                    materia
                       ? {
-                          height: event.duration * 60,
-                          backgroundColor: event.color,
+                          height: materia.duration * 60,
+                          backgroundColor: materia.color,
                         }
                       : { height: 60 },
                   ]}
@@ -208,7 +208,8 @@ const CalendarScreen: React.FC = () => {
                       <TextInput
                         style={styles.input}
                         placeholder="Escribir materia"
-                        value={event ? event.event : ""}
+                        value={materia ? materia.event : ""}
+                        maxLength={30} // Limitar a 60 caracteres
                         onChangeText={(text) => handleInputChange(time, text)}
                       />
                       <View
@@ -222,7 +223,9 @@ const CalendarScreen: React.FC = () => {
                       </View>
                     </View>
                   ) : (
-                    event && <Text style={styles.eventText}>{event.event}</Text>
+                    materia && (
+                      <Text style={styles.eventText}>{materia.event}</Text>
+                    )
                   )}
                 </TouchableOpacity>
               );
@@ -234,6 +237,7 @@ const CalendarScreen: React.FC = () => {
   );
 };
 
+// Estilos
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5", paddingBottom: 20 },
   header: {
