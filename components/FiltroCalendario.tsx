@@ -27,36 +27,38 @@ const FiltroCalendario: React.FC<CalendarioProps> = ({
       dateNumberStyle={{ color: "black", fontSize: 18 }}
       dateNameStyle={{ color: "gray", fontSize: 12 }}
       highlightDateNumberStyle={{
-        color: moment(fechaSeleccionada).isSame(today, "day") ? "blue" : "red", // Azul para la fecha seleccionada si es hoy, rojo si no es hoy
+        color: "red", // Color por defecto para fechas resaltadas
         fontSize: 20,
       }}
       highlightDateNameStyle={{
-        color: moment(fechaSeleccionada).isSame(today, "day") ? "blue" : "red", // Azul para la fecha seleccionada si es hoy, rojo si no es hoy
+        color: "red", // Color por defecto para fechas resaltadas
         fontSize: 14,
       }}
       customDatesStyles={[
         {
-          date: today,
+          date: today, // La fecha de hoy
           style: { backgroundColor: "transparent" },
-          textStyle: { color: "blue", fontSize: 20 }, // La fecha actual siempre está en azul
-          textNameStyle: { color: "blue", fontSize: 14 },
+          textStyle: {
+            color: "blue", // Azul para la fecha actual
+            fontSize: 20,
+          },
+          textNameStyle: {
+            color: "blue", // Azul para el nombre de la fecha actual
+            fontSize: 14,
+          },
         },
         {
-          date: moment(fechaSeleccionada),
+          date: moment(fechaSeleccionada), // La fecha seleccionada
           style: {
             backgroundColor: "transparent",
-            textStyle: {
-              color: moment(fechaSeleccionada).isSame(today, "day")
-                ? "blue" // Si la fecha seleccionada es hoy, azul
-                : "red", // Si la fecha seleccionada no es hoy, rojo
-              fontSize: 20,
-            },
-            textNameStyle: {
-              color: moment(fechaSeleccionada).isSame(today, "day")
-                ? "blue"
-                : "red",
-              fontSize: 14,
-            },
+          },
+          textStyle: {
+            color: "red", // Rojo para la fecha seleccionada (si no es hoy)
+            fontSize: 20,
+          },
+          textNameStyle: {
+            color: "red", // Rojo para el nombre de la fecha seleccionada (si no es hoy)
+            fontSize: 14,
           },
         },
       ]}
