@@ -5,6 +5,9 @@
     "jsx": "react-native",
     "module": "esnext",
     "target": "es2017",
-    "outDir": "./build" // Si deseas que los archivos compilados se coloquen en una carpeta específica
+    "outDir": "./build",
+    "paths": {
+      "expo-router": ["./node_modules/expo-router"]
+    }
   }
 }

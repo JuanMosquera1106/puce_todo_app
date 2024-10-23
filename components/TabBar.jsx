@@ -12,7 +12,6 @@ const TabBar = ({ state, descriptors, navigation }) => {
   const icons = {
     "(tareas)/index": (props) => <AntDesign name="home" size={26} {...props} />,
     calendar: (props) => <AntDesign name="calendar" size={26} {...props} />,
-    timer: (props) => <MaterialIcons name="av-timer" size={26} {...props} />,
     performance: (props) => (
       <FontAwesome name="bar-chart-o" size={26} {...props} />
     ),

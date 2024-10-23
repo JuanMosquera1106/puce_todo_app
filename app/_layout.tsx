@@ -17,7 +17,6 @@ const _layout = () => {
               options={{ title: "Home", headerShown: false }}
             />
             <Tabs.Screen name="calendar" options={{ title: "Calendario" }} />
-            <Tabs.Screen name="timer" options={{ title: "Cronómetro" }} />
             <Tabs.Screen
               name="performance"
               options={{ title: "Rendimiento" }}

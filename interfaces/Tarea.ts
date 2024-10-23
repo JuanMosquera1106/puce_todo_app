@@ -14,4 +14,5 @@ export interface Tarea {
     descanso: number; // En minutos
     intervalo: number; // Número de ciclos
   };
+  completada: boolean;
 }

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import 'react-native-gesture-handler';
 import { ScrollView, View, StyleSheet, Modal } from "react-native"; // Importar Modal
 import Calendario from "../../components/FiltroCalendario";
 import ListaTareas from "../../components/ListaTareas";
