@@ -21,10 +21,6 @@ import {
   PriorityIcon,
   CalendarIcon,
   RepeatIcon,
-<<<<<<< HEAD
-=======
-  RememberIcon,
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
   TimeIcon,
   CloseIcon,
   AceptIcon,
@@ -78,30 +74,18 @@ export default function FormularioTareaModal({
       intervalo: 1,
     },
   );
-<<<<<<< HEAD
 
   const [fechaError, setFechaError] = useState("");
-=======
-  const [recordatorio, setRecordatorio] = useState<{
-    hora: string;
-    tipo: string;
-  } | null>(tareaInicial?.recordatorio || null);
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [mostrarNotificacion, setMostrarNotificacion] = useState<
     "Pomodoro" | "Recordatorios" | "Repetir" | "Prioridad" | null
   >(null);
-<<<<<<< HEAD
-=======
-
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
   const [mostrarTimer, setMostrarTimer] = useState(false); // Estado para mostrar el Timer
 
   const handleDateChange = (event: any, selectedDate: Date | undefined) => {
     setShowDatePicker(false);
     if (selectedDate) {
-<<<<<<< HEAD
       const now = moment().startOf("day");
       const chosenDate = moment(selectedDate).startOf("day");
 
@@ -112,27 +96,14 @@ export default function FormularioTareaModal({
         setTareaFechaVencimiento(formattedDate);
         setFechaError("");
       }
-=======
-      const formattedDate = moment(selectedDate)
-        .startOf("day") // Establecer la hora a las 00:00:00
-        .format("YYYY-MM-DD"); // Formato ISO o cualquier formato que prefieras
-
-      setTareaFechaVencimiento(formattedDate);
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
     }
   };
 
   const { dayEvents } = useCalendar(); // Usar el hook correctamente
 
   // Extraer la lista de materias desde los eventos del contexto
-<<<<<<< HEAD
   const materiasDisponibles = Object.values(dayEvents).flatMap((events) =>
     Object.values(events).map((materia) => (materia as Materia).event),
-=======
-  const materiasDisponibles = Object.values(dayEvents).flatMap(
-    (events) =>
-      Object.values(events).map((materia) => (materia as Materia).event), // Asegúrate de que el tipo sea Materia
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
   );
 
   // Validar que el nombre de la tarea no esté vacío y que no exceda los 50 caracteres
@@ -142,14 +113,11 @@ export default function FormularioTareaModal({
       return;
     }
 
-<<<<<<< HEAD
     if (moment(tareaFechaVencimiento).isBefore(moment(), "day")) {
       setFechaError("La fecha de vencimiento no puede ser anterior a hoy.");
       return;
     }
 
-=======
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
     const tarea: Tarea = {
       id: esEditar && tareaInicial ? tareaInicial.id : generateId(),
       nombre: tareaNombre,
@@ -157,13 +125,8 @@ export default function FormularioTareaModal({
       materia: tareaMateria,
       fechaVencimiento: tareaFechaVencimiento,
       repetir: repetirFrecuencia,
-<<<<<<< HEAD
       pomodoro: pomodoroConfig,
       completada: tareaInicial?.completada || false, // Add the 'completada' property
-=======
-      recordatorio: recordatorio,
-      pomodoro: pomodoroConfig,
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
     };
 
     if (esEditar) {
@@ -229,19 +192,13 @@ export default function FormularioTareaModal({
               className="border border-gray-300 rounded-md p-3 my-2"
               value={tareaNombre}
               onChangeText={(text) => {
-<<<<<<< HEAD
                 if (text.length <= 30) {
                   setTareaNombre(text); // Solo permitirá hasta 30 caracteres
-=======
-                if (text.length <= 50) {
-                  setTareaNombre(text); // Solo permitirá hasta 50 caracteres
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
                 }
               }}
               placeholder="Nombre de la tarea"
             />
 
-<<<<<<< HEAD
             {/* Fecha de vencimiento */}
             <StyledText className="text-lg">Fecha de Vencimiento</StyledText>
             <StyledPressable onPress={() => setShowDatePicker(true)}>
@@ -255,8 +212,6 @@ export default function FormularioTareaModal({
               <StyledText className="text-red-500">{fechaError}</StyledText>
             ) : null}
 
-=======
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
             {/* Opciones adicionales (Pomodoro, Recordatorio, Repetir, Prioridad) */}
             <StyledScrollView
               horizontal
@@ -271,16 +226,6 @@ export default function FormularioTareaModal({
               </StyledPressable>
 
               <StyledPressable
-<<<<<<< HEAD
-=======
-                onPress={() => setMostrarNotificacion("Recordatorios")}
-                className="mx-3"
-              >
-                <RememberIcon />
-              </StyledPressable>
-
-              <StyledPressable
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
                 onPress={() => setMostrarNotificacion("Repetir")}
                 className="mx-3"
               >
@@ -349,44 +294,6 @@ export default function FormularioTareaModal({
                         <CloseIcon />
                       </StyledPressable>
 
-<<<<<<< HEAD
-=======
-                      {/* Configuración de Recordatorios */}
-                      {mostrarNotificacion === "Recordatorios" && (
-                        <StyledView>
-                          <StyledText className="text-lg mb-4">
-                            Configurar Recordatorio
-                          </StyledText>
-                          <StyledTextInput
-                            className="border border-gray-300 rounded-md p-2 my-2"
-                            placeholder="HH:MM"
-                            value={recordatorio?.hora || ""}
-                            onChangeText={(value) =>
-                              setRecordatorio({
-                                ...recordatorio,
-                                hora: value || "",
-                                tipo: recordatorio?.tipo || "Diario",
-                              })
-                            }
-                          />
-                          <Picker
-                            selectedValue={recordatorio?.tipo || "Diario"}
-                            onValueChange={(value) =>
-                              setRecordatorio({
-                                ...recordatorio,
-                                tipo: value,
-                                hora: recordatorio?.hora || "",
-                              })
-                            }
-                          >
-                            <Picker.Item label="Diario" value="Diario" />
-                            <Picker.Item label="Semanal" value="Semanal" />
-                            <Picker.Item label="Mensual" value="Mensual" />
-                          </Picker>
-                        </StyledView>
-                      )}
-
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
                       {/* Configuración de Repetir */}
                       {mostrarNotificacion === "Repetir" && (
                         <StyledView>

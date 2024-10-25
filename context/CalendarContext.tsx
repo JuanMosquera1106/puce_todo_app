@@ -7,10 +7,7 @@ interface CalendarContextType {
   setDayEvents: React.Dispatch<React.SetStateAction<DayEvents>>;
   loadEvents: () => Promise<void>;
   saveEvents: () => Promise<void>;
-<<<<<<< HEAD
   updateEvent: (date: string, eventData: any) => void; // Función para actualizar eventos
-=======
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
 }
 
 const CalendarContext = createContext<CalendarContextType | undefined>(
@@ -22,10 +19,7 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [dayEvents, setDayEvents] = useState<DayEvents>({});
 
-<<<<<<< HEAD
   // Función para cargar eventos desde AsyncStorage
-=======
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
   const loadEvents = async () => {
     try {
       const savedEvents = await AsyncStorage.getItem("dayEvents");
@@ -37,10 +31,7 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-<<<<<<< HEAD
   // Función para guardar eventos en AsyncStorage
-=======
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
   const saveEvents = async () => {
     try {
       await AsyncStorage.setItem("dayEvents", JSON.stringify(dayEvents));
@@ -49,7 +40,6 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-<<<<<<< HEAD
   // Función para actualizar un evento específico
   const updateEvent = (date: string, eventData: any) => {
     setDayEvents((prevEvents) => ({
@@ -58,8 +48,6 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
     }));
   };
 
-=======
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
   useEffect(() => {
     loadEvents();
   }, []);
@@ -70,21 +58,14 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <CalendarContext.Provider
-<<<<<<< HEAD
       value={{ dayEvents, setDayEvents, loadEvents, saveEvents, updateEvent }}
-=======
-      value={{ dayEvents, setDayEvents, loadEvents, saveEvents }}
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
     >
       {children}
     </CalendarContext.Provider>
   );
 };
 
-<<<<<<< HEAD
 // Hook para usar el contexto
-=======
->>>>>>> fd59d14e718270452c6c2e64e420788942320673
 export const useCalendar = () => {
   const context = useContext(CalendarContext);
   if (!context) {

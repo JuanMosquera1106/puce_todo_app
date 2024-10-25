@@ -1,25 +1,29 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  Button,
-  Modal,
-  Pressable,
-  StyleSheet,
-} from "react-native";
-import RNPickerSelect from 'react-native-picker-select'; // Usamos RNPickerSelect para la selección
+import { View, Text, Button, Modal, Pressable, StyleSheet } from "react-native";
+import RNPickerSelect from "react-native-picker-select"; // Usamos RNPickerSelect para la selección
 
 interface TimerProps {
   visible: boolean;
-  onSave: (config: { duracion: number; descanso: number; intervalo: number }) => void;
+  onSave: (config: {
+    duracion: number;
+    descanso: number;
+    intervalo: number;
+  }) => void;
   onClose: () => void;
   duracionInicial: number; // Valor inicial para la duración
   descansoInicial: number; // Valor inicial para el descanso
   intervaloInicial: number; // Valor inicial para los intervalos
 }
 
-const Timer: React.FC<TimerProps> = ({ visible, onSave, onClose, duracionInicial, descansoInicial, intervaloInicial }) => {
-  const [workTime, setWorkTime] = useState(duracionInicial);  // Inicia con el valor pasado por props
+const Timer: React.FC<TimerProps> = ({
+  visible,
+  onSave,
+  onClose,
+  duracionInicial,
+  descansoInicial,
+  intervaloInicial,
+}) => {
+  const [workTime, setWorkTime] = useState(duracionInicial); // Inicia con el valor pasado por props
   const [breakTime, setBreakTime] = useState(descansoInicial); // Inicia con el valor pasado por props
   const [intervals, setIntervals] = useState(intervaloInicial); // Inicia con el valor pasado por props
 
@@ -40,9 +44,18 @@ const Timer: React.FC<TimerProps> = ({ visible, onSave, onClose, duracionInicial
     onClose(); // Cierra el modal después de guardar
   };
 
-  const workTimeOptions = Array.from({ length: 59 }, (_, i) => ({ label: `${i + 1} minutos`, value: i + 1 }));
-  const breakTimeOptions = Array.from({ length: 15 }, (_, i) => ({ label: `${i + 1} minutos`, value: i + 1 }));
-  const intervalOptions = Array.from({ length: 5 }, (_, i) => ({ label: `${i + 1} ciclo(s)`, value: i + 1 }));
+  const workTimeOptions = Array.from({ length: 59 }, (_, i) => ({
+    label: `${i + 1} minutos`,
+    value: i + 1,
+  }));
+  const breakTimeOptions = Array.from({ length: 15 }, (_, i) => ({
+    label: `${i + 1} minutos`,
+    value: i + 1,
+  }));
+  const intervalOptions = Array.from({ length: 5 }, (_, i) => ({
+    label: `${i + 1} ciclo(s)`,
+    value: i + 1,
+  }));
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
@@ -129,9 +142,9 @@ const pickerSelectStyles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: 'gray',
+    borderColor: "gray",
     borderRadius: 4,
-    color: 'black',
+    color: "black",
     paddingRight: 30,
   },
   inputAndroid: {
@@ -139,9 +152,9 @@ const pickerSelectStyles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderWidth: 0.5,
-    borderColor: 'purple',
+    borderColor: "purple",
     borderRadius: 8,
-    color: 'black',
+    color: "black",
     paddingRight: 30,
   },
 });
