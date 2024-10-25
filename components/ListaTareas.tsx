@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+<<<<<<< HEAD
 import {
   View,
   ActivityIndicator,
@@ -6,6 +7,9 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
+=======
+import { View, ActivityIndicator, Text, TouchableOpacity, Image } from "react-native";
+>>>>>>> fd59d14e718270452c6c2e64e420788942320673
 import { useTareas } from "../context/TareasContext";
 import TareaCard from "./TareaCard";
 import EmptyState from "./EmptyState";
@@ -42,6 +46,7 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
     if (tareas) {
       const tareasDelDia = tareas.filter(
         (tarea) =>
+<<<<<<< HEAD
           tarea.fechaVencimiento ===
           moment(fechaSeleccionada).format("YYYY-MM-DD"),
       );
@@ -57,13 +62,25 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
           (a, b) => prioridadValor[b.prioridad] - prioridadValor[a.prioridad],
         ),
       );
+=======
+          tarea.fechaVencimiento === moment(fechaSeleccionada).format("YYYY-MM-DD")
+      );
+      setTareaCreadaHoy(tareasDelDia.length > 0);
+      const tareasNoCompletadas = tareasDelDia.filter(tarea => !tarea.completada);
+      const tareasCompletadas = tareasDelDia.filter(tarea => tarea.completada);
+      setTareasFiltradas(tareasNoCompletadas.sort((a, b) => prioridadValor[b.prioridad] - prioridadValor[a.prioridad]));
+>>>>>>> fd59d14e718270452c6c2e64e420788942320673
       setTareasCompletadas(tareasCompletadas);
 
       // Filtrar tareas incompletas que ya han pasado de fecha
       const tareasIncompletasPasadas = tareas.filter(
         (tarea) =>
           tarea.fechaVencimiento < moment().format("YYYY-MM-DD") &&
+<<<<<<< HEAD
           !tarea.completada,
+=======
+          !tarea.completada
+>>>>>>> fd59d14e718270452c6c2e64e420788942320673
       );
       setTareasIncompletas(tareasIncompletasPasadas);
     }
@@ -87,6 +104,7 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
     <View>
       {tareasFiltradas.length === 0 && tareasCompletadas.length === 0 ? (
         tareaCreadaHoy ? (
+<<<<<<< HEAD
           <Text
             style={{
               textAlign: "center",
@@ -95,15 +113,22 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
               marginTop: 20,
             }}
           >
+=======
+          <Text style={{ textAlign: "center", fontSize: 18, color: "green", marginTop: 20 }}>
+>>>>>>> fd59d14e718270452c6c2e64e420788942320673
             ¡Felicidades! Has completado todas tus tareas.
           </Text>
         ) : (
           <View style={{ alignItems: "center", marginTop: 20 }}>
             <EmptyState />
+<<<<<<< HEAD
             <Image
               source={require("../assets/no-tareas.png")}
               style={{ width: 150, height: 150 }}
             />
+=======
+            <Image source={require("../assets/no-tareas.png")} style={{ width: 150, height: 150 }} />
+>>>>>>> fd59d14e718270452c6c2e64e420788942320673
           </View>
         )
       ) : (
@@ -121,6 +146,7 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
           ))}
           {tareasCompletadas.length > 0 && (
             <View>
+<<<<<<< HEAD
               <TouchableOpacity
                 onPress={() => setMostrarCompletadas(!mostrarCompletadas)}
                 style={{
@@ -138,6 +164,13 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
                   size={16}
                   color="#555"
                 />
+=======
+              <TouchableOpacity onPress={() => setMostrarCompletadas(!mostrarCompletadas)} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 10 }}>
+                <Text style={{ fontSize: 16, color: "#555" }}>
+                  Completado ({tareasCompletadas.length})
+                </Text>
+                <FontAwesome name={mostrarCompletadas ? "chevron-up" : "chevron-down"} size={16} color="#555" />
+>>>>>>> fd59d14e718270452c6c2e64e420788942320673
               </TouchableOpacity>
               {mostrarCompletadas && (
                 <View>
@@ -158,6 +191,7 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
           )}
           {tareasIncompletas.length > 0 && (
             <View>
+<<<<<<< HEAD
               <TouchableOpacity
                 onPress={() => setMostrarIncompletas(!mostrarIncompletas)}
                 style={{
@@ -175,6 +209,13 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
                   size={16}
                   color="#555"
                 />
+=======
+              <TouchableOpacity onPress={() => setMostrarIncompletas(!mostrarIncompletas)} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 10 }}>
+                <Text style={{ fontSize: 16, color: "red" }}>
+                  Incompleto ({tareasIncompletas.length})
+                </Text>
+                <FontAwesome name={mostrarIncompletas ? "chevron-up" : "chevron-down"} size={16} color="#555" />
+>>>>>>> fd59d14e718270452c6c2e64e420788942320673
               </TouchableOpacity>
               {mostrarIncompletas && (
                 <View>

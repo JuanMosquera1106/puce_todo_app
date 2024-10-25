@@ -85,9 +85,14 @@ export const AceptIcon = (props: { size?: number; color?: string }) => (
 
 // Componente para el icono Play con FontAwesome6 (Nuevo)
 export const PlayIcon = (props: { size?: number; color?: string }) => (
+<<<<<<< HEAD
   <FontAwesome6
     name="play"
     size={props.size || 24}
     color={props.color || "green"}
   />
 );
+=======
+  <FontAwesome6 name="play" size={props.size || 24} color={props.color || "green"} />
+);
+>>>>>>> fd59d14e718270452c6c2e64e420788942320673
