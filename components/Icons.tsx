@@ -91,3 +91,21 @@ export const PlayIcon = (props: { size?: number; color?: string }) => (
     color={props.color || "green"}
   />
 );
+
+// Componente para el icono Play con FontAwesome6 (Nuevo para "Iniciar")
+export const PlayIcon2 = (props: { size?: number; color?: string }) => (
+  <FontAwesome6
+    name="play"
+    size={props.size || 24}
+    color={props.color || "green"}
+  />
+);
+
+// Componente para el icono Repeat con FontAwesome6 (Nuevo para "Repetir")
+export const RepeatIcon2 = (props: { size?: number; color?: string }) => (
+  <FontAwesome6
+    name="repeat"
+    size={props.size || 24}
+    color={props.color || "orange"}
+  />
+);

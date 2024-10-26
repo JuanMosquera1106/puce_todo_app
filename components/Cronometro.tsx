@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet, Modal } from "react-native";
+import { View, Text, Button, StyleSheet, Modal, TouchableOpacity } from "react-native";
 import { Audio } from "expo-av";
 import { BackHandler } from "react-native";
+import * as Progress from 'react-native-progress';  // Importar la librería de progreso
+import { PlayIcon2, RepeatIcon2 } from "./Icons"; // Asegúrate de importar los íconos correctamente
 
 interface CronometroProps {
   duracion: number;
@@ -101,7 +103,7 @@ const Cronometro: React.FC<CronometroProps> = ({
       // Después de desactivar la alarma para iniciar el break
       setModoTrabajo(false);
       setTiempoRestante(descanso * 60); // Ajustar tiempo de break
-      setActivo(true); // Iniciar automáticamente el break
+      setActivo(true); // Iniciar automáticamente el break (botón verde)
     }
   };
 
@@ -131,49 +133,56 @@ const Cronometro: React.FC<CronometroProps> = ({
     }
   };
 
-  // Función para manejar el botón físico "Atrás"
-  useEffect(() => {
-    const backAction = () => {
-      setShowModal(true); // Mostrar modal de confirmación al presionar atrás
-      return true; // Esto previene la acción predeterminada de "atrás"
-    };
-
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      backAction,
-    );
-
-    return () => backHandler.remove(); // Eliminar el listener al desmontar el componente
-  }, []);
+  // Calcular el progreso en porcentaje
+  const progreso = tiempoRestante / (modoTrabajo ? duracion * 60 : descanso * 60);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.timer}>{formatearTiempo(tiempoRestante)}</Text>
+      {/* Círculo de progreso */}
+      <Progress.Circle
+        size={250}
+        progress={progreso}
+        showsText={true}
+        textStyle={styles.timer}
+        color="#3498db"
+        thickness={8}
+        formatText={() => formatearTiempo(tiempoRestante)}
+      />
       <Text style={styles.modo}>{mostrarModoYIntervalo()}</Text>
 
       <View style={styles.controls}>
-        <Button
-          title={activo ? "Pausar" : "Iniciar"}
-          onPress={activo ? pausarCronometro : iniciarCronometro}
-        />
-        <Button title="Resetear" onPress={resetearCronometro} />
+        <TouchableOpacity onPress={activo ? pausarCronometro : iniciarCronometro}>
+          <PlayIcon2 size={50} color={activo ? "red" : "green"} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={resetearCronometro}>
+          <RepeatIcon2 size={50} color="orange" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.volverContainer}>
-        <Button title="Volver" onPress={handleVolver} />
-      </View>
+  <TouchableOpacity onPress={handleVolver} style={styles.botonVolver}>
+    <Text style={styles.textoVolver}>Volver</Text>
+  </TouchableOpacity>
+</View>
+
 
       {/* Modal para la alarma */}
       {showAlarma && (
-        <Modal visible={showAlarma} animationType="slide" transparent={true}>
-          <View style={styles.alarmaContainer}>
-            <Text style={styles.alarmaText}>
-              {modoTrabajo ? "Fin de Focus" : "Fin del Break"}
-            </Text>
-            <Button title="Desactivar Alarma" onPress={desactivarAlarma} />
-          </View>
-        </Modal>
-      )}
+  <Modal visible={showAlarma} animationType="slide" transparent={true}>
+    <View style={styles.alarmaContainer}>
+      <Text style={styles.alarmaText}>
+        {modoTrabajo ? "Fin de Focus" : "Fin del Break"}
+      </Text>
+      <TouchableOpacity
+        onPress={desactivarAlarma}
+        style={styles.botonDesactivarAlarma}
+      >
+        <Text style={styles.textoDesactivarAlarma}>Desactivar Alarma</Text>
+      </TouchableOpacity>
+    </View>
+  </Modal>
+)}
+
 
       {/* Modal de confirmación para regresar */}
       {showModal && (
@@ -184,9 +193,13 @@ const Cronometro: React.FC<CronometroProps> = ({
                 ¿Deseas volver al inicio? El cronómetro se reiniciará.
               </Text>
               <View style={styles.modalButtons}>
-                <Button title="Cancelar" onPress={() => setShowModal(false)} />
-                <Button title="Confirmar" onPress={confirmarVolver} />
-              </View>
+  <TouchableOpacity onPress={() => setShowModal(false)} style={styles.botonVolver}>
+    <Text style={styles.textoVolver}>Cancelar</Text>
+  </TouchableOpacity>
+  <TouchableOpacity onPress={confirmarVolver} style={styles.botonConfirmar}>
+    <Text style={styles.textoConfirmar}>Confirmar</Text>
+  </TouchableOpacity>
+</View>
             </View>
           </View>
         </Modal>
@@ -205,34 +218,47 @@ const styles = StyleSheet.create({
   timer: {
     fontSize: 48,
     fontWeight: "bold",
-    marginBottom: 20,
+    color: "#000",
   },
   modo: {
     fontSize: 24,
-    marginBottom: 20,
+    marginTop: 20,
     color: "#555",
   },
   controls: {
     flexDirection: "row",
     justifyContent: "space-around",
-    width: "60%",
+    width: "50%",
+    marginTop: 20,
   },
   volverContainer: {
     marginTop: 20,
     alignItems: "center",
   },
-  alarmaContainer: {
-    flex: 1,
-    justifyContent: "center",
+  botonVolver: {
+    backgroundColor: "#FF6347",
+    padding: 10,
+    borderRadius: 5,
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  alarmaText: {
-    fontSize: 30,
+  textoVolver: {
+    color: "white",
+    fontSize: 20,  // Ajusta este valor al tamaño de letra que desees
     fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 20,
   },
+  
+botonConfirmar: {
+  backgroundColor: "#00BFFF",  // Color original para "Confirmar"
+  padding: 10,
+  borderRadius: 5,
+  alignItems: "center",
+},
+textoConfirmar: {
+  color: "white",
+  fontSize: 16,  // Tamaño de letra para "Confirmar"
+  fontWeight: "bold",
+},
+  
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -255,6 +281,32 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
+  },
+  alarmaContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",  // Fondo oscuro semitransparente
+    padding: 20,
+  },
+  alarmaText: {
+    fontSize: 30,  // Texto grande para resaltar "Fin de Break"
+    color: "#FFF",  // Blanco para contrastar con el fondo oscuro
+    textAlign: "center",
+    marginBottom: 20,
+    fontWeight: "bold",  // Resaltar el texto
+  },
+  botonDesactivarAlarma: {
+    backgroundColor: "#FF6347",  // Usar el mismo color que en "Cancelar" y "Volver"
+    paddingVertical: 12,  // Espacio vertical para que el botón se vea más grande
+    paddingHorizontal: 30,  // Espacio horizontal para un buen relleno
+    borderRadius: 8,  // Bordes redondeados para un diseño más moderno
+  },
+  textoDesactivarAlarma: {
+    color: "#FFF",  // Blanco para el texto del botón
+    fontSize: 18,  // Tamaño adecuado para que sea visible
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
 
