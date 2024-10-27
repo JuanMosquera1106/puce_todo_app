@@ -1,23 +1,56 @@
 import React, { useState } from "react";
 import 'react-native-gesture-handler';
-import { ScrollView, View, StyleSheet, Modal } from "react-native"; // Importar Modal
+import { ScrollView, View, StyleSheet, Modal, TouchableOpacity, Text } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 import Calendario from "../../components/FiltroCalendario";
 import ListaTareas from "../../components/ListaTareas";
 import BotonAgregarTarea from "../../components/BotonAgregarTarea";
 import FormularioTareaModal from "../../components/FormularioTarea";
-import Cronometro from "../../components/Cronometro"; // Importamos el cronómetro
-import { Tarea } from "../../interfaces/Tarea"; // Importar la interfaz Tarea
-import { TareasProvider } from "../../context/TareasContext"; // Asegúrate de que la ruta sea correcta
+import Cronometro from "../../components/Cronometro";
+import Opciones from "../../components/Opciones"; // Asegúrate de la ruta correcta a Opciones
+import { Tarea } from "../../interfaces/Tarea";
+import { TareasProvider } from "../../context/TareasContext";
 
-const Header: React.FC<{
+interface HeaderProps {
   fechaSeleccionada: Date;
   setFechaSeleccionada: (fecha: Date) => void;
-}> = ({ fechaSeleccionada, setFechaSeleccionada }) => {
+  toggleMostrarCompletadas: () => void;
+  toggleMostrarAtrasadas: () => void;
+  toggleMostrarPendientes: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({
+  fechaSeleccionada,
+  setFechaSeleccionada,
+  toggleMostrarCompletadas,
+  toggleMostrarAtrasadas,
+  toggleMostrarPendientes
+}) => {
+  const [opcionesModalVisible, setOpcionesModalVisible] = useState(false);
+
   return (
     <View style={styles.header}>
       <Calendario
         fechaSeleccionada={fechaSeleccionada}
         setFechaSeleccionada={setFechaSeleccionada}
+      />
+      <TouchableOpacity
+        onPress={() => setOpcionesModalVisible(true)}
+        style={styles.iconoOpciones}
+      >
+        <MaterialIcons name="more-horiz" size={30} color="black" />
+      </TouchableOpacity>
+
+      {/* Uso del componente Opciones */}
+      <Opciones
+        visible={opcionesModalVisible}
+        onClose={() => setOpcionesModalVisible(false)}
+        mostrarCompletadas={true} // Propiedad dummy para el ejemplo
+        toggleMostrarCompletadas={toggleMostrarCompletadas}
+        mostrarAtrasadas={true} // Propiedad dummy para el ejemplo
+        toggleMostrarAtrasadas={toggleMostrarAtrasadas}
+        mostrarPendientes={true} // Propiedad dummy para el ejemplo
+        toggleMostrarPendientes={toggleMostrarPendientes}
       />
     </View>
   );
@@ -26,16 +59,21 @@ const Header: React.FC<{
 const GestionTareas: React.FC = () => {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date());
   const [modalVisible, setModalVisible] = useState(false);
-  const [tareaActual, setTareaActual] = useState<Tarea | undefined>(undefined); // Usar undefined en lugar de null
+  const [tareaActual, setTareaActual] = useState<Tarea | undefined>(undefined);
   const [esEditar, setEsEditar] = useState(false);
-  const [mostrarCronometro, setMostrarCronometro] = useState(false); // Controla si el cronómetro está visible
-  const [tareaCronometro, setTareaCronometro] = useState<Tarea | undefined>(
-    undefined,
-  ); // Tarea para el cronómetro
+  const [mostrarCronometro, setMostrarCronometro] = useState(false);
+  const [tareaCronometro, setTareaCronometro] = useState<Tarea | undefined>(undefined);
+  const [mostrarCompletadas, setMostrarCompletadas] = useState(true);
+  const [mostrarAtrasadas, setMostrarAtrasadas] = useState(true);
+  const [mostrarPendientes, setMostrarPendientes] = useState(true);
+
+  const toggleMostrarCompletadas = () => setMostrarCompletadas(!mostrarCompletadas);
+  const toggleMostrarAtrasadas = () => setMostrarAtrasadas(!mostrarAtrasadas);
+  const toggleMostrarPendientes = () => setMostrarPendientes(!mostrarPendientes);
 
   const handleAbrirModal = (tarea: Tarea | undefined) => {
     setTareaActual(tarea);
-    setEsEditar(!!tarea); // Es editar si hay una tarea existente
+    setEsEditar(!!tarea);
     setModalVisible(true);
   };
 
@@ -44,12 +82,12 @@ const GestionTareas: React.FC = () => {
   };
 
   const handleIniciarCronometro = (tarea: Tarea) => {
-    setTareaCronometro(tarea); // Guardar la tarea que tendrá el cronómetro
-    setMostrarCronometro(true); // Mostrar el cronómetro
+    setTareaCronometro(tarea);
+    setMostrarCronometro(true);
   };
 
   const handleCerrarCronometro = () => {
-    setMostrarCronometro(false); // Cierra el cronómetro y vuelve a la lista
+    setMostrarCronometro(false);
   };
 
   return (
@@ -57,12 +95,18 @@ const GestionTareas: React.FC = () => {
       <Header
         fechaSeleccionada={fechaSeleccionada}
         setFechaSeleccionada={setFechaSeleccionada}
+        toggleMostrarCompletadas={toggleMostrarCompletadas}
+        toggleMostrarAtrasadas={toggleMostrarAtrasadas}
+        toggleMostrarPendientes={toggleMostrarPendientes}
       />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <ListaTareas
           fechaSeleccionada={fechaSeleccionada}
           handleAbrirModal={handleAbrirModal}
-          handleIniciarCronometro={handleIniciarCronometro} // Pasamos la función de iniciar cronómetro
+          handleIniciarCronometro={handleIniciarCronometro}
+          mostrarCompletadas={mostrarCompletadas}
+          mostrarAtrasadas={mostrarAtrasadas}
+          mostrarPendientes={mostrarPendientes}
         />
       </ScrollView>
       <View style={styles.botonContainer}>
@@ -72,12 +116,10 @@ const GestionTareas: React.FC = () => {
         <FormularioTareaModal
           visible={modalVisible}
           onClose={handleCloseModal}
-          tareaInicial={tareaActual} // tareaActual puede ser undefined
+          tareaInicial={tareaActual}
           esEditar={esEditar}
         />
       )}
-
-      {/* Modal para mostrar el cronómetro */}
       {mostrarCronometro && (
         <Modal
           visible={mostrarCronometro}
@@ -85,11 +127,11 @@ const GestionTareas: React.FC = () => {
           transparent={true}
         >
           <Cronometro
-            duracion={tareaCronometro?.pomodoro?.duracion || 25} // Asigna la duración de la tarea
-            descanso={tareaCronometro?.pomodoro?.descanso || 5} // Asigna el descanso de la tarea
-            intervalos={tareaCronometro?.pomodoro?.intervalo || 4} // Asigna los intervalos de la tarea
-            onFinish={handleCerrarCronometro} // Al finalizar, cerrar el cronómetro
-            onRegresar={handleCerrarCronometro} // Añadimos la opción para cerrar y regresar al listado de tareas
+            duracion={tareaCronometro?.pomodoro?.duracion || 25}
+            descanso={tareaCronometro?.pomodoro?.descanso || 5}
+            intervalos={tareaCronometro?.pomodoro?.intervalo || 4}
+            onFinish={handleCerrarCronometro}
+            onRegresar={handleCerrarCronometro}
           />
         </Modal>
       )}
@@ -104,17 +146,50 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   header: {
-    paddingTop: 30, // Espacio en la parte superior del encabezado
-    paddingBottom: 10, // Espacio en la parte inferior del encabezado
-    backgroundColor: "white", // Asegúrate de que el fondo del encabezado coincida
+    paddingTop: 30,
+    paddingBottom: 10,
+    backgroundColor: "white",
+  },
+  iconoOpciones: {
+    position: "absolute",
+    top: 30,
+    right: 10,
+    padding: 5,
   },
   scrollViewContent: {
-    paddingBottom: 80, // Ajustar el espacio para que no se cubra el botón
+    paddingBottom: 80,
   },
   botonContainer: {
     justifyContent: "flex-end",
     alignItems: "flex-end",
-    padding: 5, // Espacio alrededor del botón
+    padding: 5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: "white",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontWeight: "bold",
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  optionText: {
+    fontSize: 16,
+    paddingVertical: 8,
+    color: "#333",
+  },
+  closeButton: {
+    marginTop: 10,
+    color: "blue",
   },
 });
 

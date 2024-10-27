@@ -27,7 +27,7 @@ const FiltroCalendario: React.FC<CalendarioProps> = ({
 
   return (
     <CalendarStrip
-      style={{ height: 100, paddingTop: 15, paddingBottom: 10 }}
+      style={{ height: 100, paddingTop: 15, paddingBottom: 1, marginTop: 25, marginBottom: 12 }}
       selectedDate={fechaSeleccionada}
       startingDate={startingDate}
       onDateSelected={handleDateSelected}

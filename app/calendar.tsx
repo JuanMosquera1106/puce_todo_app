@@ -3,17 +3,19 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   ScrollView,
   TouchableOpacity,
   PanResponder,
+  Animated,
 } from "react-native";
-import { useCalendar } from "../context/CalendarContext"; // Importa el contexto
-import Calendario from "../components/FiltroSemanal"; // Importa tu componente de calendario
-import { Materia } from "../interfaces/Materia"; // Importa la interfaz Materia
+import { useCalendar } from "../context/CalendarContext";
+import Calendario from "../components/FiltroSemanal";
+import { Materia } from "../interfaces/Materia";
+import { Picker } from "@react-native-picker/picker";
+import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 
-// Horas del día con intervalos de 30 minutos
 const timeBlocks = [
+  "7:00 a. m.",
   "8:00 a. m.",
   "8:30 a. m.",
   "9:00 a. m.",
@@ -49,27 +51,8 @@ const timeBlocks = [
   "12:00 a. m.",
 ];
 
-// Función para obtener un color aleatorio
-const getRandomColor = (): string => {
-  const colors = [
-    "#f28b82",
-    "#fbbc04",
-    "#34a853",
-    "#a7ffeb",
-    "#cbf0f8",
-    "#aecbfa",
-    "#d7aefb",
-    "#a4c639",
-  ];
-  return colors[Math.floor(Math.random() * colors.length)];
-};
+const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
-// Formatear la fecha
-const formatDate = (date: Date) => {
-  return date.toISOString().split("T")[0]; // Convierte la fecha en formato YYYY-MM-DD
-};
-
-// Componente Header
 const Header: React.FC<{
   fechaSeleccionada: Date;
   setFechaSeleccionada: (fecha: Date) => void;
@@ -84,37 +67,23 @@ const Header: React.FC<{
   );
 };
 
-// Componente principal CalendarScreen
 const CalendarScreen: React.FC = () => {
-  const { dayEvents, setDayEvents } = useCalendar(); // Usar el contexto
+  const { dayEvents, setDayEvents, materiasGlobales } = useCalendar();
   const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date());
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
   const [draggingHeight, setDraggingHeight] = useState<number>(1);
   const [startIndex, setStartIndex] = useState<number | null>(null);
 
   const formattedDate = formatDate(fechaSeleccionada);
-  const materias: { [key: string]: Materia } = dayEvents[formattedDate] || {}; // Asegúrate de que sea del tipo correcto
+  const materias: { [key: string]: Materia } = dayEvents[formattedDate] || {};
 
-  // Manejar el cambio en la materia
-  const handleInputChange = (time: string, text: string) => {
+  const handleInputChange = (time: string, materiaSeleccionada: Materia) => {
     setDayEvents((prevDayEvents) => {
-      // Si el texto está vacío, eliminamos la tarea
-      if (text.trim() === "") {
-        const updatedMaterias = { ...prevDayEvents[formattedDate] };
-        delete updatedMaterias[time]; // Eliminamos la tarea vacía
-        return {
-          ...prevDayEvents,
-          [formattedDate]: updatedMaterias,
-        };
-      }
-
-      // De lo contrario, actualizamos o creamos la tarea
       const updatedMaterias: { [key: string]: Materia } = {
         ...prevDayEvents[formattedDate],
         [time]: {
+          ...materiaSeleccionada,
           time,
-          event: text,
-          color: getRandomColor(),
           duration: draggingHeight,
         },
       };
@@ -125,33 +94,27 @@ const CalendarScreen: React.FC = () => {
     });
   };
 
-  // Manejar el clic en el bloque de hora
   const handleBlockClick = (time: string, index: number) => {
     setSelectedBlock(time);
     setStartIndex(index);
     setDraggingHeight(materias[time]?.duration || 1);
   };
 
-  // Manejar el movimiento del PanResponder
   const handlePanResponderMove = (e: any, gestureState: any) => {
-    const blockHeight = 60; // Altura de cada bloque en píxeles
+    const blockHeight = 60;
     const draggedBlocks = Math.round(gestureState.dy / blockHeight);
     const newHeight = Math.max(1, draggingHeight + draggedBlocks);
     setDraggingHeight(newHeight);
   };
 
-  // Manejar cuando se suelta el bloque
   const handlePanResponderRelease = () => {
     if (selectedBlock !== null && startIndex !== null) {
       setDayEvents((prevDayEvents) => {
         const updatedMaterias = { ...prevDayEvents[formattedDate] };
         const timeKey = timeBlocks[startIndex];
-
-        // Actualiza la duración de la materia
         if (updatedMaterias[timeKey]) {
           updatedMaterias[timeKey].duration = draggingHeight;
         }
-
         return {
           ...prevDayEvents,
           [formattedDate]: updatedMaterias,
@@ -180,6 +143,7 @@ const CalendarScreen: React.FC = () => {
           <View style={styles.timeColumn}>
             {timeBlocks.map((time, index) => (
               <View key={index} style={styles.timeRow}>
+                <FontAwesome name="clock-o" size={16} color="#666" />
                 <Text style={styles.timeText}>{time}</Text>
               </View>
             ))}
@@ -194,38 +158,39 @@ const CalendarScreen: React.FC = () => {
                   key={index}
                   style={[
                     styles.eventSlot,
-                    materia
-                      ? {
-                          height: materia.duration * 60,
-                          backgroundColor: materia.color,
-                        }
-                      : { height: 60 },
+                    materia ? {
+                      height: materia.duration * 60,
+                      backgroundColor: materia.color,
+                      borderRadius: 12,
+                    } : { height: 60 },
                   ]}
                   onPress={() => handleBlockClick(time, index)}
                 >
                   {isSelected ? (
-                    <View style={{ height: draggingHeight * 60 }}>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Escribir materia"
-                        value={materia ? materia.event : ""}
-                        maxLength={30} // Limitar a 60 caracteres
-                        onChangeText={(text) => handleInputChange(time, text)}
-                      />
-                      <View
-                        {...panResponder.panHandlers}
-                        style={styles.dragHandle}
+                    <Animated.View style={{ height: draggingHeight * 60 }}>
+                      <Picker
+                        selectedValue={materia ? materia.event : null}
+                        onValueChange={(itemValue) => {
+                          const materiaSeleccionada = materiasGlobales.find(
+                            (mat) => mat.event === itemValue
+                          );
+                          if (materiaSeleccionada) {
+                            handleInputChange(time, materiaSeleccionada);
+                          }
+                        }}
+                        style={styles.picker}
                       >
-                        <View style={styles.dragIconContainer}>
-                          <View style={styles.dragLine} />
-                          <View style={styles.dragLine} />
-                        </View>
+                        <Picker.Item label="Selecciona una materia" value={null} />
+                        {materiasGlobales.map((mat, idx) => (
+                          <Picker.Item key={idx} label={mat.event} value={mat.event} />
+                        ))}
+                      </Picker>
+                      <View {...panResponder.panHandlers} style={styles.dragHandle}>
+                        <MaterialIcons name="drag-handle" size={24} color="#666" />
                       </View>
-                    </View>
+                    </Animated.View>
                   ) : (
-                    materia && (
-                      <Text style={styles.eventText}>{materia.event}</Text>
-                    )
+                    materia && <Text style={styles.eventText}>{materia.event}</Text>
                   )}
                 </TouchableOpacity>
               );
@@ -237,62 +202,53 @@ const CalendarScreen: React.FC = () => {
   );
 };
 
-// Estilos
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5", paddingBottom: 20 },
   header: {
     paddingTop: 30,
     paddingBottom: 10,
-    backgroundColor: "white",
+    backgroundColor: "#ffffff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
   },
   scheduleContainer: { flexDirection: "row", flex: 1, marginTop: 10 },
   timeColumn: { width: 100, paddingLeft: 20 },
   timeRow: {
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "#e0e0e0",
     height: 60,
-    justifyContent: "center",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    flexDirection: "row",
   },
-  timeText: { color: "#000", fontSize: 16 },
+  timeText: { color: "#333", fontSize: 16, marginLeft: 10 },
   eventsColumn: { flex: 1, marginLeft: 10 },
   eventSlot: {
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "#e0e0e0",
     paddingVertical: 10,
     paddingHorizontal: 5,
     position: "relative",
   },
-  input: {
-    backgroundColor: "#ffffff",
-    borderColor: "#ccc",
+  picker: {
+    backgroundColor: "#fff",
+    borderColor: "#ddd",
     borderWidth: 1,
     borderRadius: 8,
     padding: 10,
-    color: "#000",
   },
   eventText: {
     color: "#000",
     fontSize: 16,
   },
   dragHandle: {
-    backgroundColor: "#e0e0e0",
-    padding: 5,
     alignItems: "center",
-    borderRadius: 4,
     position: "absolute",
-    bottom: 0,
-    right: 5,
-  },
-  dragIconContainer: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dragLine: {
-    width: 20,
-    height: 3,
-    backgroundColor: "#000",
-    marginVertical: 2,
+    bottom: 5,
+    right: 10,
   },
 });
 

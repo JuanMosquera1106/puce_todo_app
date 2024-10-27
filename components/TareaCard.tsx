@@ -12,6 +12,7 @@ import { styled } from "nativewind";
 import { DeleteIcon } from "../components/Icons";
 import { Tarea } from "../interfaces/Tarea";
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
+import { useCalendar } from "../context/CalendarContext"; // Añadido para obtener el contexto
 
 const StyledPressable = styled(Pressable);
 const StyledText = styled(Text);
@@ -48,6 +49,11 @@ const TareaCard: React.FC<TareaCardProps> = ({
   onPlay,
   completada,
 }) => {
+  const { materiasGlobales } = useCalendar(); // Mover esta línea aquí para acceder al contexto
+
+  // Encuentra el nombre de la materia usando `tarea.materia` como `id`
+  const nombreMateria = materiasGlobales.find((materia) => materia.id === tarea.materia)?.event || "Ninguna";
+
   const [isCompleted, setIsCompleted] = useState(completada);
   const animatedValue = useRef(new Animated.Value(0)).current;
 
@@ -81,13 +87,16 @@ const TareaCard: React.FC<TareaCardProps> = ({
       [
         { text: "Cancelar", style: "cancel" },
         { text: "Eliminar", onPress: onDelete },
-      ],
+      ]
     );
   };
 
   return (
     <StyledPressable
-      className={`p-4 mb-4 rounded-lg shadow-lg flex-row justify-between items-center ${getColorByPriority(tarea.prioridad, isCompleted).backgroundColor}`}
+      className={`p-4 mb-4 rounded-lg shadow-lg flex-row justify-between items-center ${getColorByPriority(
+        tarea.prioridad,
+        isCompleted
+      ).backgroundColor}`}
       style={[getColorByPriority(tarea.prioridad, isCompleted), styles.card]}
       onPress={onEdit}
     >
@@ -121,9 +130,9 @@ const TareaCard: React.FC<TareaCardProps> = ({
             ellipsizeMode="tail"
           >
             Materia:{" "}
-            {tarea.materia.length > 20
-              ? `${tarea.materia.substring(0, 20)}...`
-              : tarea.materia}
+            {nombreMateria.length > 20
+              ? `${nombreMateria.substring(0, 20)}...`
+              : nombreMateria}
           </StyledText>
         </View>
       </View>

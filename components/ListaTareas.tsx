@@ -17,6 +17,9 @@ interface ListaTareasProps {
   fechaSeleccionada: Date;
   handleAbrirModal: (tarea: Tarea) => void;
   handleIniciarCronometro: (tarea: Tarea) => void;
+  mostrarCompletadas: boolean;
+  mostrarAtrasadas: boolean;
+  mostrarPendientes: boolean;
 }
 
 const prioridadValor: Record<"Alta" | "Media" | "Baja", number> = {
@@ -29,12 +32,15 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
   fechaSeleccionada,
   handleAbrirModal,
   handleIniciarCronometro,
+  mostrarCompletadas,
+  mostrarAtrasadas,
+  mostrarPendientes,
 }) => {
   const { tareas, cargando, eliminarTarea, actualizarTarea } = useTareas();
   const [tareasFiltradas, setTareasFiltradas] = useState<Tarea[]>([]);
   const [tareasCompletadas, setTareasCompletadas] = useState<Tarea[]>([]);
-  const [mostrarCompletadas, setMostrarCompletadas] = useState(false);
   const [tareasIncompletas, setTareasIncompletas] = useState<Tarea[]>([]);
+  const [mostrarCompletadasLocal, setMostrarCompletadasLocal] = useState(mostrarCompletadas);
   const [mostrarIncompletas, setMostrarIncompletas] = useState(false);
   const [tareaCreadaHoy, setTareaCreadaHoy] = useState(false);
 
@@ -42,32 +48,34 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
     if (tareas) {
       const tareasDelDia = tareas.filter(
         (tarea) =>
-          tarea.fechaVencimiento ===
-          moment(fechaSeleccionada).format("YYYY-MM-DD"),
+          tarea.fechaVencimiento === moment(fechaSeleccionada).format("YYYY-MM-DD")
       );
-      setTareaCreadaHoy(tareasDelDia.length > 0);
-      const tareasNoCompletadas = tareasDelDia.filter(
-        (tarea) => !tarea.completada,
-      );
-      const tareasCompletadas = tareasDelDia.filter(
-        (tarea) => tarea.completada,
-      );
-      setTareasFiltradas(
-        tareasNoCompletadas.sort(
-          (a, b) => prioridadValor[b.prioridad] - prioridadValor[a.prioridad],
-        ),
-      );
-      setTareasCompletadas(tareasCompletadas);
 
-      // Filtrar tareas incompletas que ya han pasado de fecha
+      setTareaCreadaHoy(tareasDelDia.length > 0);
+
+      // Filtrar las tareas del día según su estado (completada o no completada)
+      const tareasNoCompletadas = tareasDelDia.filter((tarea) => !tarea.completada);
+      const tareasCompletadas = tareasDelDia.filter((tarea) => tarea.completada);
+
+      // Aplicar filtro de prioridad en las tareas no completadas
+      setTareasFiltradas(
+        tareasNoCompletadas
+          .filter((tarea) => mostrarPendientes)
+          .sort((a, b) => prioridadValor[b.prioridad] - prioridadValor[a.prioridad])
+      );
+
+      setTareasCompletadas(mostrarCompletadas ? tareasCompletadas : []);
+
+      // Filtrar tareas incompletas que ya han pasado de fecha (atrasadas)
       const tareasIncompletasPasadas = tareas.filter(
         (tarea) =>
           tarea.fechaVencimiento < moment().format("YYYY-MM-DD") &&
-          !tarea.completada,
+          !tarea.completada &&
+          mostrarAtrasadas
       );
       setTareasIncompletas(tareasIncompletasPasadas);
     }
-  }, [tareas, fechaSeleccionada]);
+  }, [tareas, fechaSeleccionada, mostrarCompletadas, mostrarAtrasadas, mostrarPendientes]);
 
   if (cargando) {
     return (
@@ -108,6 +116,7 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
         )
       ) : (
         <View>
+          {/* Tareas del día que no están completadas y pendientes */}
           {tareasFiltradas.map((item: Tarea) => (
             <TareaCard
               key={item.id}
@@ -119,10 +128,12 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
               completada={item.completada}
             />
           ))}
+
+          {/* Tareas completadas del día */}
           {tareasCompletadas.length > 0 && (
             <View>
               <TouchableOpacity
-                onPress={() => setMostrarCompletadas(!mostrarCompletadas)}
+                onPress={() => setMostrarCompletadasLocal(!mostrarCompletadasLocal)}
                 style={{
                   flexDirection: "row",
                   justifyContent: "space-between",
@@ -134,12 +145,12 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
                   Completado ({tareasCompletadas.length})
                 </Text>
                 <FontAwesome
-                  name={mostrarCompletadas ? "chevron-up" : "chevron-down"}
+                  name={mostrarCompletadasLocal ? "chevron-up" : "chevron-down"}
                   size={16}
                   color="#555"
                 />
               </TouchableOpacity>
-              {mostrarCompletadas && (
+              {mostrarCompletadasLocal && (
                 <View>
                   {tareasCompletadas.map((item: Tarea) => (
                     <TareaCard
@@ -156,6 +167,8 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
               )}
             </View>
           )}
+
+          {/* Tareas incompletas que están atrasadas */}
           {tareasIncompletas.length > 0 && (
             <View>
               <TouchableOpacity

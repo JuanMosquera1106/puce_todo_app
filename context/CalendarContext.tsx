@@ -1,52 +1,53 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DayEvents } from "../interfaces/Materia";
+import { DayEvents, Materia } from "../interfaces/Materia";
 
 interface CalendarContextType {
   dayEvents: DayEvents;
   setDayEvents: React.Dispatch<React.SetStateAction<DayEvents>>;
   loadEvents: () => Promise<void>;
   saveEvents: () => Promise<void>;
-  updateEvent: (date: string, eventData: any) => void; // Función para actualizar eventos
+  updateEvent: (date: string, eventData: any) => void;
+  materiasGlobales: Materia[];
+  setMateriasGlobales: React.Dispatch<React.SetStateAction<Materia[]>>;
+  agregarMateriaAlContexto: (materia: Materia) => void;
 }
 
-const CalendarContext = createContext<CalendarContextType | undefined>(
-  undefined,
-);
+const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
 
-export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [dayEvents, setDayEvents] = useState<DayEvents>({});
+  const [materiasGlobales, setMateriasGlobales] = useState<Materia[]>([]);
 
-  // Función para cargar eventos desde AsyncStorage
   const loadEvents = async () => {
     try {
       const savedEvents = await AsyncStorage.getItem("dayEvents");
-      if (savedEvents) {
-        setDayEvents(JSON.parse(savedEvents));
-      }
+      const savedMaterias = await AsyncStorage.getItem("materiasGlobales");
+
+      if (savedEvents) setDayEvents(JSON.parse(savedEvents));
+      if (savedMaterias) setMateriasGlobales(JSON.parse(savedMaterias));
     } catch (error) {
       console.error("Error loading data:", error);
     }
   };
 
-  // Función para guardar eventos en AsyncStorage
   const saveEvents = async () => {
     try {
       await AsyncStorage.setItem("dayEvents", JSON.stringify(dayEvents));
+      await AsyncStorage.setItem("materiasGlobales", JSON.stringify(materiasGlobales));
     } catch (error) {
       console.error("Error saving data:", error);
     }
   };
 
-  // Función para actualizar un evento específico
-  const updateEvent = (date: string, eventData: any) => {
-    setDayEvents((prevEvents) => ({
-      ...prevEvents,
-      [date]: eventData,
-    }));
-  };
+    // CalendarContext.js
+    const agregarMateriaAlContexto = (materia: Materia): Materia => {
+      const nuevaMateria = { ...materia, id: Math.random().toString(36).substr(2, 9) };
+      setMateriasGlobales((prevMaterias) => [...prevMaterias, nuevaMateria]);
+      return nuevaMateria; // Asegúrate de que aquí se retorne la nueva materia creada
+    };
+    
+
 
   useEffect(() => {
     loadEvents();
@@ -54,18 +55,31 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     saveEvents();
-  }, [dayEvents]);
+  }, [dayEvents, materiasGlobales]);
 
   return (
     <CalendarContext.Provider
-      value={{ dayEvents, setDayEvents, loadEvents, saveEvents, updateEvent }}
+      value={{
+        dayEvents,
+        setDayEvents,
+        loadEvents,
+        saveEvents,
+        updateEvent: (date, eventData) => {
+          setDayEvents((prevEvents) => ({
+            ...prevEvents,
+            [date]: eventData,
+          }));
+        },
+        materiasGlobales,
+        setMateriasGlobales,
+        agregarMateriaAlContexto,
+      }}
     >
       {children}
     </CalendarContext.Provider>
   );
 };
 
-// Hook para usar el contexto
 export const useCalendar = () => {
   const context = useContext(CalendarContext);
   if (!context) {

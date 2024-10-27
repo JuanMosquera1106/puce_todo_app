@@ -13,7 +13,7 @@ const BotonAgregarTarea: React.FC<BotonAgregarTareaProps> = ({ onPress }) => {
   return (
     <StyledPressable
       onPress={onPress}
-      className="bg-gray-200 w-16 h-16 rounded-full active:opacity-80 flex items-center justify-center relative bottom-20 right-1"
+      className="bg-gray-200 w-16 h-16 rounded-full active:opacity-80 flex items-center justify-center relative bottom-24 right-1"
     >
       <AddIcon />
     </StyledPressable>

@@ -1,4 +1,5 @@
 export interface Materia {
+  id: string;
   time: string;
   event: string;
   color: string;
