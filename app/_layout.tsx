@@ -16,7 +16,6 @@ const _layout = () => {
               name="(tareas)/index"
               options={{ title: "Home", headerShown: false }}
             />
-<<<<<<< HEAD
             <Tabs.Screen
               name="calendar"
               options={{ title: "Calendario", headerShown: false }}
@@ -24,12 +23,6 @@ const _layout = () => {
             <Tabs.Screen
               name="performance"
               options={{ title: "Rendimiento", headerShown: false }}
-=======
-            <Tabs.Screen name="calendar" options={{ title: "Calendario" }} />
-            <Tabs.Screen
-              name="performance"
-              options={{ title: "Rendimiento" }}
->>>>>>> fc5e4fc128a70fc242b5e6c700dff94d5c8734dc
             />
           </Tabs>
         </View>
