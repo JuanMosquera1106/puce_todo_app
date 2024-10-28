@@ -15,7 +15,11 @@ import { Ionicons } from "@expo/vector-icons";
 
 interface TimerProps {
   visible: boolean;
-  onSave: (config: { duracion: number; descanso: number; intervalo: number }) => void;
+  onSave: (config: {
+    duracion: number;
+    descanso: number;
+    intervalo: number;
+  }) => void;
   onClose: () => void;
   duracionInicial: number;
   descansoInicial: number;
@@ -72,7 +76,7 @@ const Timer: React.FC<TimerProps> = ({
         [
           { text: "Cancelar", style: "cancel" },
           { text: "Salir", onPress: onClose },
-        ]
+        ],
       );
     } else {
       onClose();
@@ -98,70 +102,90 @@ const Timer: React.FC<TimerProps> = ({
     <Modal visible={visible} transparent={true} animationType="fade">
       <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.modalContainer}>
-          <Animated.View
-            style={[
-              styles.modalContent,
-              { opacity: fadeAnim, transform: [{ translateY: translateYAnim }] },
-            ]}
-          >
-            <Text style={styles.modalTitle}>Configura tu Pomodoro</Text>
+          <TouchableWithoutFeedback>
+            <Animated.View
+              style={[
+                styles.modalContent,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ translateY: translateYAnim }],
+                },
+              ]}
+            >
+              <Text style={styles.modalTitle}>Configura tu Pomodoro</Text>
 
-            <View style={styles.sectionContainer}>
-              <View style={styles.iconLabelContainer}>
-                <Ionicons name="timer-outline" size={20} color="#4A90E2" style={styles.icon} />
-                <Text style={styles.label}>Duración del Pomodoro</Text>
+              <View style={styles.sectionContainer}>
+                <View style={styles.iconLabelContainer}>
+                  <Ionicons
+                    name="timer-outline"
+                    size={20}
+                    color="#4A90E2"
+                    style={styles.icon}
+                  />
+                  <Text style={styles.label}>Duración del Pomodoro</Text>
+                </View>
+                <RNPickerSelect
+                  onValueChange={(value) => {
+                    setWorkTime(value);
+                    handleChange();
+                  }}
+                  items={workTimeOptions}
+                  value={workTime}
+                  placeholder={{ label: "Seleccionar tiempo", value: null }}
+                  style={pickerSelectStyles}
+                />
               </View>
-              <RNPickerSelect
-                onValueChange={(value) => {
-                  setWorkTime(value);
-                  handleChange();
-                }}
-                items={workTimeOptions}
-                value={workTime}
-                placeholder={{ label: "Seleccionar tiempo", value: null }}
-                style={pickerSelectStyles}
-              />
-            </View>
 
-            <View style={styles.sectionContainer}>
-              <View style={styles.iconLabelContainer}>
-                <Ionicons name="cafe-outline" size={20} color="#4A90E2" style={styles.icon} />
-                <Text style={styles.label}>Tiempo de Descanso</Text>
+              <View style={styles.sectionContainer}>
+                <View style={styles.iconLabelContainer}>
+                  <Ionicons
+                    name="cafe-outline"
+                    size={20}
+                    color="#4A90E2"
+                    style={styles.icon}
+                  />
+                  <Text style={styles.label}>Tiempo de Descanso</Text>
+                </View>
+                <RNPickerSelect
+                  onValueChange={(value) => {
+                    setBreakTime(value);
+                    handleChange();
+                  }}
+                  items={breakTimeOptions}
+                  value={breakTime}
+                  placeholder={{ label: "Seleccionar descanso", value: null }}
+                  style={pickerSelectStyles}
+                />
               </View>
-              <RNPickerSelect
-                onValueChange={(value) => {
-                  setBreakTime(value);
-                  handleChange();
-                }}
-                items={breakTimeOptions}
-                value={breakTime}
-                placeholder={{ label: "Seleccionar descanso", value: null }}
-                style={pickerSelectStyles}
-              />
-            </View>
 
-            <View style={styles.sectionContainer}>
-              <View style={styles.iconLabelContainer}>
-                <Ionicons name="repeat-outline" size={20} color="#4A90E2" style={styles.icon} />
-                <Text style={styles.label}>Intervalos de trabajo</Text>
+              <View style={styles.sectionContainer}>
+                <View style={styles.iconLabelContainer}>
+                  <Ionicons
+                    name="repeat-outline"
+                    size={20}
+                    color="#4A90E2"
+                    style={styles.icon}
+                  />
+                  <Text style={styles.label}>Intervalos de trabajo</Text>
+                </View>
+                <RNPickerSelect
+                  onValueChange={(value) => {
+                    setIntervals(value);
+                    handleChange();
+                  }}
+                  items={intervalOptions}
+                  value={intervals}
+                  placeholder={{ label: "Seleccionar intervalos", value: null }}
+                  style={pickerSelectStyles}
+                />
               </View>
-              <RNPickerSelect
-                onValueChange={(value) => {
-                  setIntervals(value);
-                  handleChange();
-                }}
-                items={intervalOptions}
-                value={intervals}
-                placeholder={{ label: "Seleccionar intervalos", value: null }}
-                style={pickerSelectStyles}
-              />
-            </View>
 
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Ionicons name="save-outline" size={20} color="#fff" />
-              <Text style={styles.saveButtonText}>Guardar</Text>
-            </TouchableOpacity>
-          </Animated.View>
+              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                <Ionicons name="save-outline" size={20} color="#fff" />
+                <Text style={styles.saveButtonText}>Guardar</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
     </Modal>
