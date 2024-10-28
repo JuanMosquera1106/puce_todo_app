@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet, Modal, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Button,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+} from "react-native";
 import { Audio } from "expo-av";
 import { BackHandler } from "react-native";
-import * as Progress from 'react-native-progress';  // Importar la librería de progreso
+import * as Progress from "react-native-progress"; // Importar la librería de progreso
 import { PlayIcon2, RepeatIcon2 } from "./Icons"; // Asegúrate de importar los íconos correctamente
 
 interface CronometroProps {
@@ -134,7 +141,8 @@ const Cronometro: React.FC<CronometroProps> = ({
   };
 
   // Calcular el progreso en porcentaje
-  const progreso = tiempoRestante / (modoTrabajo ? duracion * 60 : descanso * 60);
+  const progreso =
+    tiempoRestante / (modoTrabajo ? duracion * 60 : descanso * 60);
 
   return (
     <View style={styles.container}>
@@ -151,7 +159,9 @@ const Cronometro: React.FC<CronometroProps> = ({
       <Text style={styles.modo}>{mostrarModoYIntervalo()}</Text>
 
       <View style={styles.controls}>
-        <TouchableOpacity onPress={activo ? pausarCronometro : iniciarCronometro}>
+        <TouchableOpacity
+          onPress={activo ? pausarCronometro : iniciarCronometro}
+        >
           <PlayIcon2 size={50} color={activo ? "red" : "green"} />
         </TouchableOpacity>
         <TouchableOpacity onPress={resetearCronometro}>
@@ -160,29 +170,29 @@ const Cronometro: React.FC<CronometroProps> = ({
       </View>
 
       <View style={styles.volverContainer}>
-  <TouchableOpacity onPress={handleVolver} style={styles.botonVolver}>
-    <Text style={styles.textoVolver}>Volver</Text>
-  </TouchableOpacity>
-</View>
-
+        <TouchableOpacity onPress={handleVolver} style={styles.botonVolver}>
+          <Text style={styles.textoVolver}>Volver</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Modal para la alarma */}
       {showAlarma && (
-  <Modal visible={showAlarma} animationType="slide" transparent={true}>
-    <View style={styles.alarmaContainer}>
-      <Text style={styles.alarmaText}>
-        {modoTrabajo ? "Fin de Focus" : "Fin del Break"}
-      </Text>
-      <TouchableOpacity
-        onPress={desactivarAlarma}
-        style={styles.botonDesactivarAlarma}
-      >
-        <Text style={styles.textoDesactivarAlarma}>Desactivar Alarma</Text>
-      </TouchableOpacity>
-    </View>
-  </Modal>
-)}
-
+        <Modal visible={showAlarma} animationType="slide" transparent={true}>
+          <View style={styles.alarmaContainer}>
+            <Text style={styles.alarmaText}>
+              {modoTrabajo ? "Fin de Focus" : "Fin del Break"}
+            </Text>
+            <TouchableOpacity
+              onPress={desactivarAlarma}
+              style={styles.botonDesactivarAlarma}
+            >
+              <Text style={styles.textoDesactivarAlarma}>
+                Desactivar Alarma
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+      )}
 
       {/* Modal de confirmación para regresar */}
       {showModal && (
@@ -193,13 +203,19 @@ const Cronometro: React.FC<CronometroProps> = ({
                 ¿Deseas volver al inicio? El cronómetro se reiniciará.
               </Text>
               <View style={styles.modalButtons}>
-  <TouchableOpacity onPress={() => setShowModal(false)} style={styles.botonVolver}>
-    <Text style={styles.textoVolver}>Cancelar</Text>
-  </TouchableOpacity>
-  <TouchableOpacity onPress={confirmarVolver} style={styles.botonConfirmar}>
-    <Text style={styles.textoConfirmar}>Confirmar</Text>
-  </TouchableOpacity>
-</View>
+                <TouchableOpacity
+                  onPress={() => setShowModal(false)}
+                  style={styles.botonVolver}
+                >
+                  <Text style={styles.textoVolver}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={confirmarVolver}
+                  style={styles.botonConfirmar}
+                >
+                  <Text style={styles.textoConfirmar}>Confirmar</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -243,22 +259,22 @@ const styles = StyleSheet.create({
   },
   textoVolver: {
     color: "white",
-    fontSize: 20,  // Ajusta este valor al tamaño de letra que desees
+    fontSize: 20, // Ajusta este valor al tamaño de letra que desees
     fontWeight: "bold",
   },
-  
-botonConfirmar: {
-  backgroundColor: "#00BFFF",  // Color original para "Confirmar"
-  padding: 10,
-  borderRadius: 5,
-  alignItems: "center",
-},
-textoConfirmar: {
-  color: "white",
-  fontSize: 16,  // Tamaño de letra para "Confirmar"
-  fontWeight: "bold",
-},
-  
+
+  botonConfirmar: {
+    backgroundColor: "#00BFFF", // Color original para "Confirmar"
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  textoConfirmar: {
+    color: "white",
+    fontSize: 16, // Tamaño de letra para "Confirmar"
+    fontWeight: "bold",
+  },
+
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -286,25 +302,25 @@ textoConfirmar: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.7)",  // Fondo oscuro semitransparente
+    backgroundColor: "rgba(0, 0, 0, 0.7)", // Fondo oscuro semitransparente
     padding: 20,
   },
   alarmaText: {
-    fontSize: 30,  // Texto grande para resaltar "Fin de Break"
-    color: "#FFF",  // Blanco para contrastar con el fondo oscuro
+    fontSize: 30, // Texto grande para resaltar "Fin de Break"
+    color: "#FFF", // Blanco para contrastar con el fondo oscuro
     textAlign: "center",
     marginBottom: 20,
-    fontWeight: "bold",  // Resaltar el texto
+    fontWeight: "bold", // Resaltar el texto
   },
   botonDesactivarAlarma: {
-    backgroundColor: "#FF6347",  // Usar el mismo color que en "Cancelar" y "Volver"
-    paddingVertical: 12,  // Espacio vertical para que el botón se vea más grande
-    paddingHorizontal: 30,  // Espacio horizontal para un buen relleno
-    borderRadius: 8,  // Bordes redondeados para un diseño más moderno
+    backgroundColor: "#FF6347", // Usar el mismo color que en "Cancelar" y "Volver"
+    paddingVertical: 12, // Espacio vertical para que el botón se vea más grande
+    paddingHorizontal: 30, // Espacio horizontal para un buen relleno
+    borderRadius: 8, // Bordes redondeados para un diseño más moderno
   },
   textoDesactivarAlarma: {
-    color: "#FFF",  // Blanco para el texto del botón
-    fontSize: 18,  // Tamaño adecuado para que sea visible
+    color: "#FFF", // Blanco para el texto del botón
+    fontSize: 18, // Tamaño adecuado para que sea visible
     fontWeight: "bold",
     textAlign: "center",
   },
