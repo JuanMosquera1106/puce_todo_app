@@ -1,6 +1,13 @@
 import React, { useState } from "react";
-import 'react-native-gesture-handler';
-import { ScrollView, View, StyleSheet, Modal, TouchableOpacity, Text } from "react-native";
+import "react-native-gesture-handler";
+import {
+  ScrollView,
+  View,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  Text,
+} from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import Calendario from "../../components/FiltroCalendario";
 import ListaTareas from "../../components/ListaTareas";
@@ -24,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({
   setFechaSeleccionada,
   toggleMostrarCompletadas,
   toggleMostrarAtrasadas,
-  toggleMostrarPendientes
+  toggleMostrarPendientes,
 }) => {
   const [opcionesModalVisible, setOpcionesModalVisible] = useState(false);
 
@@ -62,14 +69,18 @@ const GestionTareas: React.FC = () => {
   const [tareaActual, setTareaActual] = useState<Tarea | undefined>(undefined);
   const [esEditar, setEsEditar] = useState(false);
   const [mostrarCronometro, setMostrarCronometro] = useState(false);
-  const [tareaCronometro, setTareaCronometro] = useState<Tarea | undefined>(undefined);
+  const [tareaCronometro, setTareaCronometro] = useState<Tarea | undefined>(
+    undefined,
+  );
   const [mostrarCompletadas, setMostrarCompletadas] = useState(true);
   const [mostrarAtrasadas, setMostrarAtrasadas] = useState(true);
   const [mostrarPendientes, setMostrarPendientes] = useState(true);
 
-  const toggleMostrarCompletadas = () => setMostrarCompletadas(!mostrarCompletadas);
+  const toggleMostrarCompletadas = () =>
+    setMostrarCompletadas(!mostrarCompletadas);
   const toggleMostrarAtrasadas = () => setMostrarAtrasadas(!mostrarAtrasadas);
-  const toggleMostrarPendientes = () => setMostrarPendientes(!mostrarPendientes);
+  const toggleMostrarPendientes = () =>
+    setMostrarPendientes(!mostrarPendientes);
 
   const handleAbrirModal = (tarea: Tarea | undefined) => {
     setTareaActual(tarea);
