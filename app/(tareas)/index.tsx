@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Modal,
   TouchableOpacity,
-  Text,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import Calendario from "../../components/FiltroCalendario";

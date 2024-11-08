@@ -23,7 +23,7 @@ import moment from "moment";
 import Timer from "./Timer";
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { MateriaModal } from "./MateriaModal";
-
+import Toast from "react-native-toast-message";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -242,6 +242,7 @@ export default function FormularioTareaModal({
       setFechaError("La fecha de vencimiento no puede ser anterior a hoy.");
       return;
     }
+
     const tarea: Tarea = {
       id: esEditar && tareaInicial ? tareaInicial.id : generateId(),
       nombre: tareaNombre,
@@ -253,8 +254,21 @@ export default function FormularioTareaModal({
       completada: tareaInicial?.completada || false,
     };
 
+    // Guardar la tarea según si está en modo edición o creación
     esEditar ? actualizarTarea(tarea) : agregarTarea(tarea);
     onClose();
+
+    // Mostrar notificación Toast
+    Toast.show({
+      type: "success",
+      text1: esEditar ? "Tarea actualizada" : "Tarea guardada",
+      text2: esEditar
+        ? "La tarea ha sido actualizada exitosamente."
+        : "Tu tarea ha sido creada exitosamente.",
+      position: "top",
+      visibilityTime: 3000,
+      topOffset: 60,
+    });
   };
 
   const handleGuardarPomodoro = (config: {
@@ -467,7 +481,7 @@ export default function FormularioTareaModal({
                 />
                 <StyledText className="text-sm text-gray-600 mt-1 mr-4 text-center">
                   {"    "}
-                     Prioridad
+                  Prioridad
                 </StyledText>
               </StyledPressable>
 
@@ -478,7 +492,7 @@ export default function FormularioTareaModal({
                 <FontAwesome5 name="clock" size={28} color="black" />
                 <StyledText className="text-sm text-gray-600 mt-1 mr-4 text-center">
                   {"    "}
-                     Pomodoro
+                  Pomodoro
                 </StyledText>
               </StyledPressable>
 
@@ -498,7 +512,7 @@ export default function FormularioTareaModal({
                 />
                 <StyledText className="text-sm text-gray-600 mt-1 mr-3 text-center">
                   {"    "}
-                     Repetir
+                  Repetir
                 </StyledText>
               </StyledPressable>
             </StyledScrollView>
@@ -515,112 +529,112 @@ export default function FormularioTareaModal({
             )}
 
             {mostrarNotificacion && (
-                <Modal
+              <Modal
                 transparent={true}
                 visible={!!mostrarNotificacion}
                 animationType="fade"
                 onRequestClose={() => setMostrarNotificacion(null)}
-                >
+              >
                 <Pressable
                   style={{
-                  flex: 1,
-                  backgroundColor: "rgba(0, 0, 0, 0.6)",
-                  justifyContent: "center",
-                  alignItems: "center",
+                    flex: 1,
+                    backgroundColor: "rgba(0, 0, 0, 0.6)",
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                   onPress={() => setMostrarNotificacion(null)}
                   onStartShouldSetResponder={() => true}
                 >
                   <Animated.View
-                  style={{
-                    width: "85%",
-                    maxWidth: 400,
-                    backgroundColor: "white",
-                    borderRadius: 20,
-                    paddingVertical: 25,
-                    paddingHorizontal: 20,
-                    alignItems: "center",
-                    shadowColor: "#000",
-                    shadowOpacity: 0.4,
-                    shadowRadius: 15,
-                    elevation: 12,
-                  }}
-                  onStartShouldSetResponder={() => true}
-                  >
-                  {/* Header with Icon */}
-                  <View
                     style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginBottom: 20,
+                      width: "85%",
+                      maxWidth: 400,
+                      backgroundColor: "white",
+                      borderRadius: 20,
+                      paddingVertical: 25,
+                      paddingHorizontal: 20,
+                      alignItems: "center",
+                      shadowColor: "#000",
+                      shadowOpacity: 0.4,
+                      shadowRadius: 15,
+                      elevation: 12,
                     }}
+                    onStartShouldSetResponder={() => true}
                   >
-                    {mostrarNotificacion === "Repetir" ? (
-                    <MaterialIcons
-                      name="repeat-on"
-                      size={28}
-                      color="#0891b2"
-                    />
-                    ) : (
-                    <MaterialIcons
-                      name="flag-circle"
-                      size={35}
-                      color="#0891b2"
-                    />
-                    )}
-                    <Text
-                    style={{
-                      fontSize: 22,
-                      fontWeight: "700",
-                      color: "#0891b2",
-                      marginLeft: 10,
-                      textAlign: "center",
-                    }}
+                    {/* Header with Icon */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 20,
+                      }}
                     >
-                    {mostrarNotificacion === "Repetir"
-                      ? "Configurar Repetición"
-                      : "Configurar Prioridad"}
-                    </Text>
-                  </View>
+                      {mostrarNotificacion === "Repetir" ? (
+                        <MaterialIcons
+                          name="repeat-on"
+                          size={28}
+                          color="#0891b2"
+                        />
+                      ) : (
+                        <MaterialIcons
+                          name="flag-circle"
+                          size={35}
+                          color="#0891b2"
+                        />
+                      )}
+                      <Text
+                        style={{
+                          fontSize: 22,
+                          fontWeight: "700",
+                          color: "#0891b2",
+                          marginLeft: 10,
+                          textAlign: "center",
+                        }}
+                      >
+                        {mostrarNotificacion === "Repetir"
+                          ? "Configurar Repetición"
+                          : "Configurar Prioridad"}
+                      </Text>
+                    </View>
 
-                  {/* Picker Content */}
-                  <View
-                    style={{
-                    width: "100%",
-                    borderRadius: 10,
-                    overflow: "hidden",
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    }}
-                  >
-                    {mostrarNotificacion === "Repetir" ? (
-                    <Picker
-                      selectedValue={repetirFrecuencia || "No repetir"}
-                      onValueChange={(value) => setRepetirFrecuencia(value)}
-                      style={{ height: 60, width: "100%", color: "#333" }}
+                    {/* Picker Content */}
+                    <View
+                      style={{
+                        width: "100%",
+                        borderRadius: 10,
+                        overflow: "hidden",
+                        borderWidth: 1,
+                        borderColor: "#ccc",
+                      }}
                     >
-                      <Picker.Item label="No repetir" value="No repetir" />
-                      <Picker.Item label="Diario" value="Diario" />
-                      <Picker.Item label="Semanal" value="Semanal" />
-                      <Picker.Item label="Mensual" value="Mensual" />
-                    </Picker>
-                    ) : (
-                    <Picker
-                      selectedValue={tareaPrioridad}
-                      onValueChange={(
-                      itemValue: "Baja" | "Media" | "Alta",
-                      ) => setTareaPrioridad(itemValue)}
-                      style={{ height: 50, width: "100%", color: "#333" }}
-                    >
-                      <Picker.Item label="Baja" value="Baja" />
-                      <Picker.Item label="Media" value="Media" />
-                      <Picker.Item label="Alta" value="Alta" />
-                    </Picker>
-                    )}
-                  </View>
+                      {mostrarNotificacion === "Repetir" ? (
+                        <Picker
+                          selectedValue={repetirFrecuencia || "No repetir"}
+                          onValueChange={(value) => setRepetirFrecuencia(value)}
+                          style={{ height: 60, width: "100%", color: "#333" }}
+                        >
+                          <Picker.Item label="No repetir" value="No repetir" />
+                          <Picker.Item label="Diario" value="Diario" />
+                          <Picker.Item label="Semanal" value="Semanal" />
+                          <Picker.Item label="Mensual" value="Mensual" />
+                        </Picker>
+                      ) : (
+                        <Picker
+                          selectedValue={tareaPrioridad}
+                          onValueChange={(
+                            itemValue: "Baja" | "Media" | "Alta",
+                          ) => setTareaPrioridad(itemValue)}
+                          style={{ height: 50, width: "100%", color: "#333" }}
+                        >
+                          <Picker.Item label="Baja" value="Baja" />
+                          <Picker.Item label="Media" value="Media" />
+                          <Picker.Item label="Alta" value="Alta" />
+                        </Picker>
+                      )}
+                    </View>
                   </Animated.View>
                 </Pressable>
-                </Modal>
+              </Modal>
             )}
 
             <StyledPressable

@@ -12,6 +12,7 @@ import EmptyState from "./EmptyState";
 import moment from "moment";
 import { Tarea } from "../interfaces/Tarea";
 import { FontAwesome } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
 
 interface ListaTareasProps {
   fechaSeleccionada: Date;
@@ -40,7 +41,8 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
   const [tareasFiltradas, setTareasFiltradas] = useState<Tarea[]>([]);
   const [tareasCompletadas, setTareasCompletadas] = useState<Tarea[]>([]);
   const [tareasIncompletas, setTareasIncompletas] = useState<Tarea[]>([]);
-  const [mostrarCompletadasLocal, setMostrarCompletadasLocal] = useState(mostrarCompletadas);
+  const [mostrarCompletadasLocal, setMostrarCompletadasLocal] =
+    useState(mostrarCompletadas);
   const [mostrarIncompletas, setMostrarIncompletas] = useState(false);
   const [tareaCreadaHoy, setTareaCreadaHoy] = useState(false);
 
@@ -48,34 +50,44 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
     if (tareas) {
       const tareasDelDia = tareas.filter(
         (tarea) =>
-          tarea.fechaVencimiento === moment(fechaSeleccionada).format("YYYY-MM-DD")
+          tarea.fechaVencimiento ===
+          moment(fechaSeleccionada).format("YYYY-MM-DD"),
       );
 
       setTareaCreadaHoy(tareasDelDia.length > 0);
 
-      // Filtrar las tareas del día según su estado (completada o no completada)
-      const tareasNoCompletadas = tareasDelDia.filter((tarea) => !tarea.completada);
-      const tareasCompletadas = tareasDelDia.filter((tarea) => tarea.completada);
+      const tareasNoCompletadas = tareasDelDia.filter(
+        (tarea) => !tarea.completada,
+      );
+      const tareasCompletadas = tareasDelDia.filter(
+        (tarea) => tarea.completada,
+      );
 
-      // Aplicar filtro de prioridad en las tareas no completadas
       setTareasFiltradas(
         tareasNoCompletadas
           .filter((tarea) => mostrarPendientes)
-          .sort((a, b) => prioridadValor[b.prioridad] - prioridadValor[a.prioridad])
+          .sort(
+            (a, b) => prioridadValor[b.prioridad] - prioridadValor[a.prioridad],
+          ),
       );
 
       setTareasCompletadas(mostrarCompletadas ? tareasCompletadas : []);
 
-      // Filtrar tareas incompletas que ya han pasado de fecha (atrasadas)
       const tareasIncompletasPasadas = tareas.filter(
         (tarea) =>
           tarea.fechaVencimiento < moment().format("YYYY-MM-DD") &&
           !tarea.completada &&
-          mostrarAtrasadas
+          mostrarAtrasadas,
       );
       setTareasIncompletas(tareasIncompletasPasadas);
     }
-  }, [tareas, fechaSeleccionada, mostrarCompletadas, mostrarAtrasadas, mostrarPendientes]);
+  }, [
+    tareas,
+    fechaSeleccionada,
+    mostrarCompletadas,
+    mostrarAtrasadas,
+    mostrarPendientes,
+  ]);
 
   if (cargando) {
     return (
@@ -89,6 +101,18 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
   const handleCompletarTarea = (tarea: Tarea) => {
     const tareaActualizada = { ...tarea, completada: !tarea.completada };
     actualizarTarea(tareaActualizada);
+  };
+
+  const handleEliminarTarea = (id: string) => {
+    eliminarTarea(id);
+    Toast.show({
+      type: "error",
+      text1: "Tarea eliminada",
+      text2: "La tarea ha sido eliminada exitosamente.",
+      position: "top",
+      visibilityTime: 3000,
+      topOffset: 60,
+    });
   };
 
   return (
@@ -116,24 +140,24 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
         )
       ) : (
         <View>
-          {/* Tareas del día que no están completadas y pendientes */}
           {tareasFiltradas.map((item: Tarea) => (
             <TareaCard
               key={item.id}
               tarea={item}
               onEdit={() => handleAbrirModal(item)}
-              onDelete={() => eliminarTarea(item.id)}
+              onDelete={() => handleEliminarTarea(item.id)}
               onComplete={() => handleCompletarTarea(item)}
               onPlay={() => handleIniciarCronometro(item)}
               completada={item.completada}
             />
           ))}
 
-          {/* Tareas completadas del día */}
           {tareasCompletadas.length > 0 && (
             <View>
               <TouchableOpacity
-                onPress={() => setMostrarCompletadasLocal(!mostrarCompletadasLocal)}
+                onPress={() =>
+                  setMostrarCompletadasLocal(!mostrarCompletadasLocal)
+                }
                 style={{
                   flexDirection: "row",
                   justifyContent: "space-between",
@@ -157,7 +181,7 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
                       key={item.id}
                       tarea={item}
                       onEdit={() => handleAbrirModal(item)}
-                      onDelete={() => eliminarTarea(item.id)}
+                      onDelete={() => handleEliminarTarea(item.id)}
                       onComplete={() => handleCompletarTarea(item)}
                       onPlay={() => handleIniciarCronometro(item)}
                       completada={item.completada}
@@ -168,7 +192,6 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
             </View>
           )}
 
-          {/* Tareas incompletas que están atrasadas */}
           {tareasIncompletas.length > 0 && (
             <View>
               <TouchableOpacity
@@ -196,7 +219,7 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
                       key={item.id}
                       tarea={item}
                       onEdit={() => handleAbrirModal(item)}
-                      onDelete={() => eliminarTarea(item.id)}
+                      onDelete={() => handleEliminarTarea(item.id)}
                       onComplete={() => handleCompletarTarea(item)}
                       onPlay={() => handleIniciarCronometro(item)}
                       completada={item.completada}

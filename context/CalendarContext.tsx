@@ -13,9 +13,13 @@ interface CalendarContextType {
   agregarMateriaAlContexto: (materia: Materia) => void;
 }
 
-const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
+const CalendarContext = createContext<CalendarContextType | undefined>(
+  undefined,
+);
 
-export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [dayEvents, setDayEvents] = useState<DayEvents>({});
   const [materiasGlobales, setMateriasGlobales] = useState<Materia[]>([]);
 
@@ -34,20 +38,24 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const saveEvents = async () => {
     try {
       await AsyncStorage.setItem("dayEvents", JSON.stringify(dayEvents));
-      await AsyncStorage.setItem("materiasGlobales", JSON.stringify(materiasGlobales));
+      await AsyncStorage.setItem(
+        "materiasGlobales",
+        JSON.stringify(materiasGlobales),
+      );
     } catch (error) {
       console.error("Error saving data:", error);
     }
   };
 
-    // CalendarContext.js
-    const agregarMateriaAlContexto = (materia: Materia): Materia => {
-      const nuevaMateria = { ...materia, id: Math.random().toString(36).substr(2, 9) };
-      setMateriasGlobales((prevMaterias) => [...prevMaterias, nuevaMateria]);
-      return nuevaMateria; // Asegúrate de que aquí se retorne la nueva materia creada
+  // CalendarContext.js
+  const agregarMateriaAlContexto = (materia: Materia): Materia => {
+    const nuevaMateria = {
+      ...materia,
+      id: Math.random().toString(36).substr(2, 9),
     };
-    
-
+    setMateriasGlobales((prevMaterias) => [...prevMaterias, nuevaMateria]);
+    return nuevaMateria; // Asegúrate de que aquí se retorne la nueva materia creada
+  };
 
   useEffect(() => {
     loadEvents();
