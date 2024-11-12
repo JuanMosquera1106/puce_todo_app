@@ -41,16 +41,16 @@ const FiltroCalendario: React.FC<CalendarioProps> = ({
       dateNameStyle={{ color: "#888", fontSize: 12 }}
       highlightDateNumberStyle={{
         color: moment(fechaSeleccionada).isSame(today, "day")
-          ? "#0000ff" // Azul si es la fecha actual seleccionada
+          ? "#ff0000" // Azul si es la fecha actual seleccionada
           : "#ff0000", // Rojo para cualquier otra fecha seleccionada
         fontSize: 22,
         fontWeight: "700",
       }}
       highlightDateNameStyle={{
         color: moment(fechaSeleccionada).isSame(today, "day")
-          ? "#0000ff" // Azul si es la fecha actual seleccionada
+          ? "#ff0000" // Azul si es la fecha actual seleccionada
           : "#ff0000", // Rojo para cualquier otra fecha seleccionada
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: "700",
       }}
       customDatesStyles={[

@@ -24,20 +24,19 @@ interface TareaCardProps {
   onComplete: () => void;
   onPlay: () => void;
   completada: boolean;
+  customStyle?: object;
 }
 
-const getColorByPriority = (prioridad: string, completada: boolean) => {
-  if (completada) return styles.itemCompleted;
-
+const getPriorityPrefix = (prioridad: string) => {
   switch (prioridad) {
     case "Alta":
-      return styles.itemHighPriority;
+      return "!!! ";
     case "Media":
-      return styles.itemMediumPriority;
+      return "!! ";
     case "Baja":
-      return styles.itemLowPriority;
+      return "! ";
     default:
-      return styles.itemDefault;
+      return "";
   }
 };
 
@@ -48,6 +47,7 @@ const TareaCard: React.FC<TareaCardProps> = ({
   onComplete,
   onPlay,
   completada,
+  customStyle,
 }) => {
   const { materiasGlobales } = useCalendar();
 
@@ -114,8 +114,8 @@ const TareaCard: React.FC<TareaCardProps> = ({
   return (
     <Swipeable renderRightActions={renderRightActions}>
       <StyledPressable
-        className={`p-4 mb-4 rounded-lg shadow-lg flex-row justify-between items-center ${getColorByPriority(tarea.prioridad, isCompleted).backgroundColor}`}
-        style={[getColorByPriority(tarea.prioridad, isCompleted), styles.card]}
+        className="p-4 mb-4 rounded-lg shadow-lg flex-row justify-between items-center"
+        style={[styles.card, customStyle]}
         onPress={onEdit}
       >
         <View style={styles.itemLeft}>
@@ -135,7 +135,7 @@ const TareaCard: React.FC<TareaCardProps> = ({
               numberOfLines={1}
               ellipsizeMode="tail"
             >
-              {tarea.nombre}
+              {getPriorityPrefix(tarea.prioridad) + tarea.nombre}
             </StyledText>
             <StyledText
               style={[
@@ -204,26 +204,6 @@ const styles = StyleSheet.create({
   iconsContainer: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  itemCompleted: {
-    backgroundColor: "#f0f0f0",
-    borderLeftColor: "#999",
-  },
-  itemHighPriority: {
-    backgroundColor: "#ffebeb",
-    borderLeftColor: "#ff5f5f",
-  },
-  itemMediumPriority: {
-    backgroundColor: "#fff7e0",
-    borderLeftColor: "#ffd700",
-  },
-  itemLowPriority: {
-    backgroundColor: "#e7f5ff",
-    borderLeftColor: "#55BCF6",
-  },
-  itemDefault: {
-    backgroundColor: "#f0f0f0",
-    borderLeftColor: "#ccc",
   },
   deleteButton: {
     justifyContent: "center",

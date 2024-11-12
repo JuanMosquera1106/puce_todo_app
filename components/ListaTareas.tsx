@@ -115,6 +115,22 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
     });
   };
 
+  const styles = {
+    tareaCompletada: {
+      borderColor: "#666", // Gris o negro para tareas completadas
+      backgroundColor: "#f0f0f0",
+    },
+    tareaPendiente: {
+      borderColor: "#55BCF6", // Azul para tareas pendientes
+      backgroundColor: "#e7f5ff",
+    },
+    tareaAtrasada: {
+      borderColor: "red", // Rojo para tareas atrasadas
+      backgroundColor: "#ffe5e5",
+    },
+  };
+  
+
   return (
     <View>
       {tareasFiltradas.length === 0 && tareasCompletadas.length === 0 ? (
@@ -141,94 +157,96 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
       ) : (
         <View>
           {tareasFiltradas.map((item: Tarea) => (
-            <TareaCard
-              key={item.id}
-              tarea={item}
-              onEdit={() => handleAbrirModal(item)}
-              onDelete={() => handleEliminarTarea(item.id)}
-              onComplete={() => handleCompletarTarea(item)}
-              onPlay={() => handleIniciarCronometro(item)}
-              completada={item.completada}
-            />
-          ))}
+  <TareaCard
+    key={item.id}
+    tarea={item}
+    onEdit={() => handleAbrirModal(item)}
+    onDelete={() => handleEliminarTarea(item.id)}
+    onComplete={() => handleCompletarTarea(item)}
+    onPlay={() => handleIniciarCronometro(item)}
+    completada={item.completada}
+    customStyle={styles.tareaPendiente}
+  />
+))}
 
-          {tareasCompletadas.length > 0 && (
-            <View>
-              <TouchableOpacity
-                onPress={() =>
-                  setMostrarCompletadasLocal(!mostrarCompletadasLocal)
-                }
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginVertical: 10,
-                }}
-              >
-                <Text style={{ fontSize: 16, color: "#555" }}>
-                  Completado ({tareasCompletadas.length})
-                </Text>
-                <FontAwesome
-                  name={mostrarCompletadasLocal ? "chevron-up" : "chevron-down"}
-                  size={16}
-                  color="#555"
-                />
-              </TouchableOpacity>
-              {mostrarCompletadasLocal && (
-                <View>
-                  {tareasCompletadas.map((item: Tarea) => (
-                    <TareaCard
-                      key={item.id}
-                      tarea={item}
-                      onEdit={() => handleAbrirModal(item)}
-                      onDelete={() => handleEliminarTarea(item.id)}
-                      onComplete={() => handleCompletarTarea(item)}
-                      onPlay={() => handleIniciarCronometro(item)}
-                      completada={item.completada}
-                    />
-                  ))}
-                </View>
-              )}
-            </View>
-          )}
+{tareasCompletadas.length > 0 && (
+  <View>
+    <TouchableOpacity
+      onPress={() => setMostrarCompletadasLocal(!mostrarCompletadasLocal)}
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginVertical: 10,
+      }}
+    >
+      <Text style={{ fontSize: 16, color: "#555" }}>
+        Completado ({tareasCompletadas.length})
+      </Text>
+      <FontAwesome
+        name={mostrarCompletadasLocal ? "chevron-up" : "chevron-down"}
+        size={16}
+        color="#555"
+      />
+    </TouchableOpacity>
+    {mostrarCompletadasLocal && (
+      <View>
+        {tareasCompletadas.map((item: Tarea) => (
+          <TareaCard
+            key={item.id}
+            tarea={item}
+            onEdit={() => handleAbrirModal(item)}
+            onDelete={() => handleEliminarTarea(item.id)}
+            onComplete={() => handleCompletarTarea(item)}
+            onPlay={() => handleIniciarCronometro(item)}
+            completada={item.completada}
+            customStyle={styles.tareaCompletada}
+          />
+        ))}
+      </View>
+    )}
+  </View>
+)}
 
-          {tareasIncompletas.length > 0 && (
-            <View>
-              <TouchableOpacity
-                onPress={() => setMostrarIncompletas(!mostrarIncompletas)}
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginVertical: 10,
-                }}
-              >
-                <Text style={{ fontSize: 16, color: "red" }}>
-                  Incompleto ({tareasIncompletas.length})
-                </Text>
-                <FontAwesome
-                  name={mostrarIncompletas ? "chevron-up" : "chevron-down"}
-                  size={16}
-                  color="#555"
-                />
-              </TouchableOpacity>
-              {mostrarIncompletas && (
-                <View>
-                  {tareasIncompletas.map((item: Tarea) => (
-                    <TareaCard
-                      key={item.id}
-                      tarea={item}
-                      onEdit={() => handleAbrirModal(item)}
-                      onDelete={() => handleEliminarTarea(item.id)}
-                      onComplete={() => handleCompletarTarea(item)}
-                      onPlay={() => handleIniciarCronometro(item)}
-                      completada={item.completada}
-                    />
-                  ))}
-                </View>
-              )}
-            </View>
-          )}
+{tareasIncompletas.length > 0 && (
+  <View>
+    <TouchableOpacity
+      onPress={() => setMostrarIncompletas(!mostrarIncompletas)}
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginVertical: 10,
+      }}
+    >
+      <Text style={{ fontSize: 16, color: "red" }}>
+        Incompleto ({tareasIncompletas.length})
+      </Text>
+      <FontAwesome
+        name={mostrarIncompletas ? "chevron-up" : "chevron-down"}
+        size={16}
+        color="#555"
+      />
+    </TouchableOpacity>
+    {mostrarIncompletas && (
+      <View>
+        {tareasIncompletas.map((item: Tarea) => (
+          <TareaCard
+            key={item.id}
+            tarea={item}
+            onEdit={() => handleAbrirModal(item)}
+            onDelete={() => handleEliminarTarea(item.id)}
+            onComplete={() => handleCompletarTarea(item)}
+            onPlay={() => handleIniciarCronometro(item)}
+            completada={item.completada}
+            customStyle={styles.tareaAtrasada}
+          />
+        ))}
+      </View>
+    )}
+  </View>
+)}
+
         </View>
       )}
     </View>

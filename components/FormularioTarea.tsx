@@ -92,11 +92,11 @@ export default function FormularioTareaModal({
   // Colores de prioridad
   const prioridadColores = {
     Baja: "#55BCF6", // Azul por defecto
-    Media: "#ffd700", // Amarillo
-    Alta: "#ff5f5f", // Rojo
+    Media: "#55BCF6", // Amarillo Se manejara el azul por defecto
+    Alta: "#55BCF6", // Rojo
   };
 
-  const colorRepetirActivo = "#d55aff"; // Morado pastel para opciones de repetir activo
+  const colorRepetirActivo = "#55BCF6"; // Morado pastel para opciones de repetir activo
   const colorRepetirInactivo = "#000"; // Negro por defecto
 
   // Track the initial values to detect any changes
