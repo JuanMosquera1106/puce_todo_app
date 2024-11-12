@@ -8,11 +8,11 @@ import {
   Easing,
   StyleSheet,
 } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 import { styled } from "nativewind";
-import { DeleteIcon } from "../components/Icons";
 import { Tarea } from "../interfaces/Tarea";
-import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
-import { useCalendar } from "../context/CalendarContext"; // Añadido para obtener el contexto
+import { FontAwesome } from "@expo/vector-icons";
+import { useCalendar } from "../context/CalendarContext";
 
 const StyledPressable = styled(Pressable);
 const StyledText = styled(Text);
@@ -49,10 +49,11 @@ const TareaCard: React.FC<TareaCardProps> = ({
   onPlay,
   completada,
 }) => {
-  const { materiasGlobales } = useCalendar(); // Mover esta línea aquí para acceder al contexto
+  const { materiasGlobales } = useCalendar();
 
-  // Encuentra el nombre de la materia usando `tarea.materia` como `id`
-  const nombreMateria = materiasGlobales.find((materia) => materia.id === tarea.materia)?.event || "Ninguna";
+  const nombreMateria =
+    materiasGlobales.find((materia) => materia.id === tarea.materia)?.event ||
+    "Ninguna";
 
   const [isCompleted, setIsCompleted] = useState(completada);
   const animatedValue = useRef(new Animated.Value(0)).current;
@@ -68,7 +69,7 @@ const TareaCard: React.FC<TareaCardProps> = ({
     } else {
       animatedValue.setValue(0);
     }
-  }, [isCompleted]);
+  }, [isCompleted, animatedValue]);
 
   const checkmarkOpacity = animatedValue.interpolate({
     inputRange: [0, 1],
@@ -87,65 +88,75 @@ const TareaCard: React.FC<TareaCardProps> = ({
       [
         { text: "Cancelar", style: "cancel" },
         { text: "Eliminar", onPress: onDelete },
-      ]
+      ],
+    );
+  };
+
+  const renderRightActions = (
+    progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>,
+  ) => {
+    const scale = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [1, 0],
+      extrapolate: "clamp",
+    });
+
+    return (
+      <Pressable onPress={confirmDelete} style={styles.deleteButton}>
+        <Animated.View style={{ transform: [{ scale }] }}>
+          <FontAwesome name="trash" size={24} color="white" />
+        </Animated.View>
+      </Pressable>
     );
   };
 
   return (
-    <StyledPressable
-      className={`p-4 mb-4 rounded-lg shadow-lg flex-row justify-between items-center ${getColorByPriority(
-        tarea.prioridad,
-        isCompleted
-      ).backgroundColor}`}
-      style={[getColorByPriority(tarea.prioridad, isCompleted), styles.card]}
-      onPress={onEdit}
-    >
-      <View style={styles.itemLeft}>
-        <Pressable
-          onPress={handleComplete}
-          style={[styles.square, isCompleted && { backgroundColor: "#666" }]}
-        >
-          <Animated.View
-            style={[styles.checkmark, { opacity: checkmarkOpacity }]}
+    <Swipeable renderRightActions={renderRightActions}>
+      <StyledPressable
+        className={`p-4 mb-4 rounded-lg shadow-lg flex-row justify-between items-center ${getColorByPriority(tarea.prioridad, isCompleted).backgroundColor}`}
+        style={[getColorByPriority(tarea.prioridad, isCompleted), styles.card]}
+        onPress={onEdit}
+      >
+        <View style={styles.itemLeft}>
+          <Pressable
+            onPress={handleComplete}
+            style={[styles.square, isCompleted && { backgroundColor: "#666" }]}
           >
-            <FontAwesome name="check" size={20} color="white" />
-          </Animated.View>
-        </Pressable>
-        <View style={styles.textContainer}>
-          <StyledText
-            style={[styles.itemText, isCompleted && styles.itemTextCompleted]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {tarea.nombre.length > 15
-              ? `${tarea.nombre.substring(0, 15)}...`
-              : tarea.nombre}
-          </StyledText>
-          <StyledText
-            style={[
-              styles.itemSubText,
-              isCompleted && styles.itemTextCompleted,
-            ]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            Materia:{" "}
-            {nombreMateria.length > 20
-              ? `${nombreMateria.substring(0, 20)}...`
-              : nombreMateria}
-          </StyledText>
+            <Animated.View
+              style={[styles.checkmark, { opacity: checkmarkOpacity }]}
+            >
+              <FontAwesome name="check" size={20} color="white" />
+            </Animated.View>
+          </Pressable>
+          <View style={styles.textContainer}>
+            <StyledText
+              style={[styles.itemText, isCompleted && styles.itemTextCompleted]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {tarea.nombre}
+            </StyledText>
+            <StyledText
+              style={[
+                styles.itemSubText,
+                isCompleted && styles.itemTextCompleted,
+              ]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              Materia: {nombreMateria}
+            </StyledText>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.iconsContainer}>
-        <StyledPressable onPress={onPlay} className="px-3 py-2">
-          <FontAwesome6 name="circle-play" size={30} color="black" />
-        </StyledPressable>
-        <StyledPressable onPress={confirmDelete} className="ml-3 px-3">
-          <DeleteIcon />
-        </StyledPressable>
-      </View>
-    </StyledPressable>
+        <View style={styles.iconsContainer}>
+          <StyledPressable onPress={onPlay} className="p-3">
+            <FontAwesome name="play-circle" size={30} color="black" />
+          </StyledPressable>
+        </View>
+      </StyledPressable>
+    </Swipeable>
   );
 };
 
@@ -213,6 +224,16 @@ const styles = StyleSheet.create({
   itemDefault: {
     backgroundColor: "#f0f0f0",
     borderLeftColor: "#ccc",
+  },
+  deleteButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 100,
+    height: "84%",
+    backgroundColor: "red",
+    borderColor: "red",
+    borderWidth: 2,
+    borderRadius: 6,
   },
 });
 

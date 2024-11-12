@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import "react-native-gesture-handler";
 import {
   ScrollView,
   View,
@@ -13,9 +12,8 @@ import ListaTareas from "../../components/ListaTareas";
 import BotonAgregarTarea from "../../components/BotonAgregarTarea";
 import FormularioTareaModal from "../../components/FormularioTarea";
 import Cronometro from "../../components/Cronometro";
-import Opciones from "../../components/Opciones"; // Asegúrate de la ruta correcta a Opciones
+import Opciones from "../../components/Opciones";
 import { Tarea } from "../../interfaces/Tarea";
-import { TareasProvider } from "../../context/TareasContext";
 
 interface HeaderProps {
   fechaSeleccionada: Date;
@@ -51,11 +49,11 @@ const Header: React.FC<HeaderProps> = ({
       <Opciones
         visible={opcionesModalVisible}
         onClose={() => setOpcionesModalVisible(false)}
-        mostrarCompletadas={true} // Propiedad dummy para el ejemplo
+        mostrarCompletadas={true}
         toggleMostrarCompletadas={toggleMostrarCompletadas}
-        mostrarAtrasadas={true} // Propiedad dummy para el ejemplo
+        mostrarAtrasadas={true}
         toggleMostrarAtrasadas={toggleMostrarAtrasadas}
-        mostrarPendientes={true} // Propiedad dummy para el ejemplo
+        mostrarPendientes={true}
         toggleMostrarPendientes={toggleMostrarPendientes}
       />
     </View>
@@ -203,12 +201,4 @@ const styles = StyleSheet.create({
   },
 });
 
-const Index = () => {
-  return (
-    <TareasProvider>
-      <GestionTareas />
-    </TareasProvider>
-  );
-};
-
-export default Index;
+export default GestionTareas;

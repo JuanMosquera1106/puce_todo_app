@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler"; // Importa GestureHandlerRootView
 import { Tabs } from "expo-router";
 import TabBar from "../components/TabBar";
 import { TareasProvider } from "../context/TareasContext";
@@ -42,27 +43,29 @@ const toastConfig = {
 
 const _layout = () => {
   return (
-    <CalendarProvider>
-      <TareasProvider>
-        <View style={{ flex: 1 }}>
-          <Tabs tabBar={(props) => <TabBar {...props} />}>
-            <Tabs.Screen
-              name="(tareas)/index"
-              options={{ title: "Home", headerShown: false }}
-            />
-            <Tabs.Screen
-              name="calendar"
-              options={{ title: "Calendario", headerShown: false }}
-            />
-            <Tabs.Screen
-              name="performance"
-              options={{ title: "Rendimiento", headerShown: false }}
-            />
-          </Tabs>
-          <Toast config={toastConfig} />
-        </View>
-      </TareasProvider>
-    </CalendarProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <CalendarProvider>
+        <TareasProvider>
+          <View style={{ flex: 1 }}>
+            <Tabs tabBar={(props) => <TabBar {...props} />}>
+              <Tabs.Screen
+                name="(tareas)/index"
+                options={{ title: "Home", headerShown: false }}
+              />
+              <Tabs.Screen
+                name="calendar"
+                options={{ title: "Calendario", headerShown: false }}
+              />
+              <Tabs.Screen
+                name="performance"
+                options={{ title: "Rendimiento", headerShown: false }}
+              />
+            </Tabs>
+            <Toast config={toastConfig} />
+          </View>
+        </TareasProvider>
+      </CalendarProvider>
+    </GestureHandlerRootView>
   );
 };
 

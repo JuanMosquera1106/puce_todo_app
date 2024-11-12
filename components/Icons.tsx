@@ -45,7 +45,7 @@ export const EditIcon = (props: { size?: number; color?: string }) => (
 
 // Componente para el icono Info con FontAwesome
 export const DeleteIcon = (props: { size?: number; color?: string }) => (
-  <MaterialIcons name="delete" size={30} color="red" />
+  <MaterialIcons name="delete" size={30} color="wihte" />
 );
 
 // Componente para el icono Info con FontAwesome
