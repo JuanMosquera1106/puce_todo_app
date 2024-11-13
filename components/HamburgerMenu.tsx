@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,8 +6,10 @@ import {
   StyleSheet,
   Animated,
   Dimensions,
+  Modal,
 } from 'react-native';
-import { Entypo, Foundation, MaterialIcons } from '@expo/vector-icons';
+import { Entypo, MaterialIcons } from '@expo/vector-icons';
+import Guide from './Guide'; // Importa el componente de guía
 
 interface HamburgerMenuProps {
   isVisible: boolean;
@@ -20,6 +22,7 @@ const screenWidth = Dimensions.get('window').width;
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ isVisible, onClose, children }) => {
   const slideAnim = useRef(new Animated.Value(-screenWidth * 0.7)).current;
   const contentAnim = useRef(new Animated.Value(0)).current;
+  const [showGuide, setShowGuide] = useState(false); // Estado para mostrar u ocultar la guía
 
   useEffect(() => {
     Animated.parallel([
@@ -35,6 +38,15 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ isVisible, onClose, child
       }),
     ]).start();
   }, [isVisible]);
+
+  const handleHelpPress = () => {
+    setShowGuide(true); // Muestra el componente Guide
+    onClose(); // Cierra el menú de hamburguesa
+  };
+
+  const handleGuideDone = () => {
+    setShowGuide(false); // Oculta el componente Guide cuando se completa
+  };
 
   return (
     <View style={styles.container}>
@@ -63,12 +75,12 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ isVisible, onClose, child
             <MaterialIcons name="topic" size={24} color="#ff6f00" />
             <Text style={styles.optionText}>Geometría I</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuOption} onPress={() => alert('Acerca de seleccionado')}>
-          <Entypo name="add-to-list" size={24} color="#ff6f00" />
+          <TouchableOpacity style={styles.menuOption} onPress={() => alert('Agregar Materia seleccionado')}>
+            <Entypo name="add-to-list" size={24} color="#ff6f00" />
             <Text style={styles.optionText}>Agregar Materia</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuOption} onPress={() => alert('Acerca de seleccionado')}>
-          <Entypo name="help-with-circle" size={24} color="#ff6f00" />
+          <TouchableOpacity style={styles.menuOption} onPress={handleHelpPress}>
+            <Entypo name="help-with-circle" size={24} color="#ff6f00" />
             <Text style={styles.optionText}>Ayuda</Text>
           </TouchableOpacity>
         </View>
@@ -78,6 +90,13 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ isVisible, onClose, child
       <Animated.View style={[styles.content, { transform: [{ translateX: contentAnim }] }]}>
         {children}
       </Animated.View>
+
+      {/* Guide Modal */}
+      <Modal visible={showGuide} animationType="slide" transparent={true}>
+        <View style={styles.guideOverlay}>
+          <Guide onDone={handleGuideDone} />
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -136,6 +155,11 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     zIndex: 0,
+  },
+  guideOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)', // Fondo oscuro semi-transparente para enfoque
+    justifyContent: 'center',
   },
 });
 
