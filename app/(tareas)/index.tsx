@@ -14,6 +14,7 @@ import FormularioTareaModal from "../../components/FormularioTarea";
 import Cronometro from "../../components/Cronometro";
 import Opciones from "../../components/Opciones";
 import { Tarea } from "../../interfaces/Tarea";
+import HamburgerMenu from "../../components/HamburgerMenu";
 
 interface HeaderProps {
   fechaSeleccionada: Date;
@@ -21,6 +22,7 @@ interface HeaderProps {
   toggleMostrarCompletadas: () => void;
   toggleMostrarAtrasadas: () => void;
   toggleMostrarPendientes: () => void;
+  setIsMenuVisible: (visible: boolean) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -29,11 +31,20 @@ const Header: React.FC<HeaderProps> = ({
   toggleMostrarCompletadas,
   toggleMostrarAtrasadas,
   toggleMostrarPendientes,
+  setIsMenuVisible,
+
 }) => {
   const [opcionesModalVisible, setOpcionesModalVisible] = useState(false);
 
   return (
     <View style={styles.header}>
+      <TouchableOpacity
+        onPress={() => setIsMenuVisible(true)}
+        style={styles.iconoHamburguesa}
+      >
+        <MaterialIcons name="menu" size={30} color="black" />
+      </TouchableOpacity>
+
       <Calendario
         fechaSeleccionada={fechaSeleccionada}
         setFechaSeleccionada={setFechaSeleccionada}
@@ -72,6 +83,8 @@ const GestionTareas: React.FC = () => {
   const [mostrarCompletadas, setMostrarCompletadas] = useState(true);
   const [mostrarAtrasadas, setMostrarAtrasadas] = useState(true);
   const [mostrarPendientes, setMostrarPendientes] = useState(true);
+  const [isMenuVisible, setIsMenuVisible] = useState<boolean>(false);
+
 
   const toggleMostrarCompletadas = () =>
     setMostrarCompletadas(!mostrarCompletadas);
@@ -99,14 +112,18 @@ const GestionTareas: React.FC = () => {
   };
 
   return (
+    <HamburgerMenu isVisible={isMenuVisible} onClose={() => setIsMenuVisible(false)}>
     <View style={styles.container}>
-      <Header
+      <Header 
+        setIsMenuVisible={setIsMenuVisible}
         fechaSeleccionada={fechaSeleccionada}
         setFechaSeleccionada={setFechaSeleccionada}
         toggleMostrarCompletadas={toggleMostrarCompletadas}
         toggleMostrarAtrasadas={toggleMostrarAtrasadas}
         toggleMostrarPendientes={toggleMostrarPendientes}
+
       />
+
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <ListaTareas
           fechaSeleccionada={fechaSeleccionada}
@@ -144,6 +161,7 @@ const GestionTareas: React.FC = () => {
         </Modal>
       )}
     </View>
+    </HamburgerMenu>
   );
 };
 
@@ -198,6 +216,12 @@ const styles = StyleSheet.create({
   closeButton: {
     marginTop: 10,
     color: "blue",
+  },
+  iconoHamburguesa: {
+    position: 'absolute',
+    top: 30,
+    left: 10,
+    padding: 5,
   },
 });
 

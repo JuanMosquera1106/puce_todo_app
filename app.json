@@ -11,13 +11,13 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "scheme": "puceapp",  // Añadimos el scheme para deep linking
+    "scheme": "puceapp",  
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.todoapp"  // Añadir un identificador de paquete único para iOS
+      "bundleIdentifier": "com.todoapp"  
     },
     "android": {
-      "package": "com.puce.todoapp",  // Añadir un identificador de paquete único para Android
+      "package": "com.puce.todoapp",  
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
