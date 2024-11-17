@@ -8,6 +8,7 @@ type TareasContextType = {
   agregarTarea: (tarea: Tarea) => void;
   actualizarTarea: (tarea: Tarea) => void;
   eliminarTarea: (id: string) => void;
+  setFiltroMateria: (materia: string | null) => void;
 };
 
 const TareasContext = createContext<TareasContextType | undefined>(undefined);
@@ -75,11 +76,28 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
     guardarTareasEnStorage(nuevasTareas); // Guardamos en AsyncStorage
   };
 
+  const [filtroMateria, setFiltroMateria] = useState<string | null>(null);
+
+  // Función para aplicar el filtro
+  const obtenerTareasFiltradas = useCallback(() => {
+    if (!filtroMateria) return tareas; // Si no hay filtro, retorna todas las tareas
+    return tareas.filter((tarea) => tarea.materia === filtroMateria);
+  }, [filtroMateria, tareas]);
+
+
   return (
     <TareasContext.Provider
-      value={{ tareas, cargando, agregarTarea, actualizarTarea, eliminarTarea }}
-    >
-      {children}
-    </TareasContext.Provider>
+    value={{
+      tareas: obtenerTareasFiltradas(), // Solo devuelve tareas filtradas
+      cargando,
+      agregarTarea,
+      actualizarTarea,
+      eliminarTarea,
+      setFiltroMateria, // Exponemos el setter del filtro
+    }}
+  >
+    {children}
+  </TareasContext.Provider>
+
   );
 };

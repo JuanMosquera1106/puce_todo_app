@@ -14,7 +14,6 @@ import FormularioTareaModal from "../../components/FormularioTarea";
 import Cronometro from "../../components/Cronometro";
 import Opciones from "../../components/Opciones";
 import { Tarea } from "../../interfaces/Tarea";
-import HamburgerMenu from "../../components/HamburgerMenu";
 
 interface HeaderProps {
   fechaSeleccionada: Date;
@@ -22,7 +21,7 @@ interface HeaderProps {
   toggleMostrarCompletadas: () => void;
   toggleMostrarAtrasadas: () => void;
   toggleMostrarPendientes: () => void;
-  setIsMenuVisible: (visible: boolean) => void;
+  openDrawer: () => void; // Nuevo: Se pasa la función para abrir el Drawer
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -31,15 +30,14 @@ const Header: React.FC<HeaderProps> = ({
   toggleMostrarCompletadas,
   toggleMostrarAtrasadas,
   toggleMostrarPendientes,
-  setIsMenuVisible,
-
+  openDrawer, // Nuevo
 }) => {
   const [opcionesModalVisible, setOpcionesModalVisible] = useState(false);
 
   return (
     <View style={styles.header}>
       <TouchableOpacity
-        onPress={() => setIsMenuVisible(true)}
+        onPress={openDrawer} // Abre el Drawer cuando se presiona
         style={styles.iconoHamburguesa}
       >
         <MaterialIcons name="menu" size={30} color="black" />
@@ -56,7 +54,6 @@ const Header: React.FC<HeaderProps> = ({
         <MaterialIcons name="more-horiz" size={30} color="black" />
       </TouchableOpacity>
 
-      {/* Uso del componente Opciones */}
       <Opciones
         visible={opcionesModalVisible}
         onClose={() => setOpcionesModalVisible(false)}
@@ -71,20 +68,18 @@ const Header: React.FC<HeaderProps> = ({
   );
 };
 
-const GestionTareas: React.FC = () => {
+const index: React.FC<any> = ({ navigation }) => {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date());
   const [modalVisible, setModalVisible] = useState(false);
   const [tareaActual, setTareaActual] = useState<Tarea | undefined>(undefined);
   const [esEditar, setEsEditar] = useState(false);
   const [mostrarCronometro, setMostrarCronometro] = useState(false);
   const [tareaCronometro, setTareaCronometro] = useState<Tarea | undefined>(
-    undefined,
+    undefined
   );
   const [mostrarCompletadas, setMostrarCompletadas] = useState(true);
   const [mostrarAtrasadas, setMostrarAtrasadas] = useState(true);
   const [mostrarPendientes, setMostrarPendientes] = useState(true);
-  const [isMenuVisible, setIsMenuVisible] = useState<boolean>(false);
-
 
   const toggleMostrarCompletadas = () =>
     setMostrarCompletadas(!mostrarCompletadas);
@@ -112,16 +107,14 @@ const GestionTareas: React.FC = () => {
   };
 
   return (
-    <HamburgerMenu isVisible={isMenuVisible} onClose={() => setIsMenuVisible(false)}>
     <View style={styles.container}>
-      <Header 
-        setIsMenuVisible={setIsMenuVisible}
+      <Header
+        openDrawer={() => navigation.openDrawer()} // Nuevo: función para abrir el Drawer
         fechaSeleccionada={fechaSeleccionada}
         setFechaSeleccionada={setFechaSeleccionada}
         toggleMostrarCompletadas={toggleMostrarCompletadas}
         toggleMostrarAtrasadas={toggleMostrarAtrasadas}
         toggleMostrarPendientes={toggleMostrarPendientes}
-
       />
 
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
@@ -161,7 +154,6 @@ const GestionTareas: React.FC = () => {
         </Modal>
       )}
     </View>
-    </HamburgerMenu>
   );
 };
 
@@ -190,39 +182,12 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     padding: 5,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    width: 300,
-    padding: 20,
-    backgroundColor: "white",
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontWeight: "bold",
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  optionText: {
-    fontSize: 16,
-    paddingVertical: 8,
-    color: "#333",
-  },
-  closeButton: {
-    marginTop: 10,
-    color: "blue",
-  },
   iconoHamburguesa: {
-    position: 'absolute',
+    position: "absolute",
     top: 30,
     left: 10,
     padding: 5,
   },
 });
 
-export default GestionTareas;
+export default index;

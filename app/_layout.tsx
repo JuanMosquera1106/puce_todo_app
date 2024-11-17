@@ -1,12 +1,12 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler"; // Importa GestureHandlerRootView
 import { Tabs } from "expo-router";
-import TabBar from "../components/TabBar";
+import AppNavigation from "./navigation/AppNavigation";
 import { TareasProvider } from "../context/TareasContext";
 import { CalendarProvider } from "../context/CalendarContext";
 import Toast, { ToastConfigParams } from "react-native-toast-message";
 import { FontAwesome } from "@expo/vector-icons";
+import { Menu, MenuProvider } from "react-native-popup-menu";
 
 // Componente personalizado para el Toast con diferentes estilos para éxito y error
 const CustomToast = ({
@@ -43,29 +43,16 @@ const toastConfig = {
 
 const _layout = () => {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <CalendarProvider>
-        <TareasProvider>
-          <View style={{ flex: 1 }}>
-            <Tabs tabBar={(props) => <TabBar {...props} />}>
-              <Tabs.Screen
-                name="(tareas)/index"
-                options={{ title: "Home", headerShown: false }}
-              />
-              <Tabs.Screen
-                name="calendar"
-                options={{ title: "Calendario", headerShown: false }}
-              />
-              <Tabs.Screen
-                name="performance"
-                options={{ title: "Rendimiento", headerShown: false }}
-              />
-            </Tabs>
-            <Toast config={toastConfig} />
-          </View>
-        </TareasProvider>
-      </CalendarProvider>
-    </GestureHandlerRootView>
+    <CalendarProvider>
+      <TareasProvider>
+      <MenuProvider>
+        <View style={{ flex: 1 }}>
+          <AppNavigation />
+          <Toast config={toastConfig} />
+        </View>
+        </MenuProvider>
+      </TareasProvider>
+    </CalendarProvider>
   );
 };
 

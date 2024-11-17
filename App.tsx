@@ -5,15 +5,18 @@ import { GestureHandlerRootView } from "react-native-gesture-handler"; // Import
 import { TareasProvider } from "./context/TareasContext"; // Asegúrate de que la ruta sea correcta
 import Layout from "./app/_layout"; // Asegúrate de que la ruta sea correcta
 import "react-native-gesture-handler";
+import { MenuProvider } from "react-native-popup-menu";
 
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <TareasProvider>
-          <StatusBar style="light" />
-          <Layout />
-        </TareasProvider>
+          <TareasProvider>
+             <MenuProvider>
+               <StatusBar style="light" />
+                <Layout />
+            </MenuProvider>
+          </TareasProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

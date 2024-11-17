@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from "react";
 import {
-  Animated,
   View,
   Text,
   TextInput,
   Modal,
-  Alert,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useCalendar } from "../context/CalendarContext";
 import { Materia } from "../interfaces/Materia";
+import { useCalendar } from "../context/CalendarContext";
 
 const colorsAvailable = [
   "#f28b82",
@@ -27,32 +26,27 @@ const colorsAvailable = [
 interface MateriaModalProps {
   visible: boolean;
   onClose: () => void;
+  onSave: () => void; // Callback para indicar que se guardaron los datos
   materia?: Materia;
 }
 
 export const MateriaModal: React.FC<MateriaModalProps> = ({
   visible,
   onClose,
+  onSave,
   materia,
 }) => {
   const { agregarMateriaAlContexto, materiasGlobales, setMateriasGlobales } =
     useCalendar();
   const [nombre, setNombre] = useState(materia?.event || "");
   const [color, setColor] = useState(materia?.color || "#f28b82");
-  const fadeAnim = useState(new Animated.Value(0))[0];
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     if (visible) {
       setNombre(materia?.event || "");
       setColor(materia?.color || "#f28b82");
-
-      // Reset and animate opacity for fade-in effect
-      fadeAnim.setValue(0);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
+      setHasChanges(false); // Restablece los cambios al abrir el modal
     }
   }, [visible, materia]);
 
@@ -61,6 +55,22 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
       Alert.alert("Error", "El nombre de la materia es obligatorio.");
       return;
     }
+
+    // Verificar si el nombre ya existe (excepto la misma materia en edición)
+    const nombreEnUso = materiasGlobales.some(
+      (mat) =>
+        mat.event.toLowerCase() === nombre.trim().toLowerCase() &&
+        (!materia || mat.id !== materia.id)
+    );
+
+    if (nombreEnUso) {
+      Alert.alert(
+        "Nombre duplicado",
+        "Ya existe una materia con este nombre. Por favor, elige otro."
+      );
+      return;
+    }
+
     const updatedMateria = materia
       ? { ...materia, event: nombre, color }
       : {
@@ -72,31 +82,54 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
         };
 
     if (materia) {
+      // Actualizar materia existente
       setMateriasGlobales(
         materiasGlobales.map((mat) =>
-          mat.id === materia.id ? updatedMateria : mat,
-        ),
+          mat.id === materia.id ? updatedMateria : mat
+        )
       );
     } else {
+      // Agregar nueva materia
       agregarMateriaAlContexto(updatedMateria);
     }
+
+    setHasChanges(false); // Indicar que no hay cambios pendientes
+    onSave(); // Notificar guardado
     onClose();
   };
 
-  const handleEliminar = () => {
-    if (materia) {
-      setMateriasGlobales(
-        materiasGlobales.filter((mat) => mat.id !== materia.id),
+  const handleClose = () => {
+    if (hasChanges) {
+      Alert.alert(
+        "Cambios sin guardar",
+        "Tienes cambios sin guardar. ¿Deseas salir sin guardar?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Salir sin guardar", onPress: onClose, style: "destructive" },
+        ]
       );
+    } else {
       onClose();
     }
   };
 
+  useEffect(() => {
+    // Detectar si hubo cambios
+    const initialNombre = materia?.event || "";
+    const initialColor = materia?.color || "#f28b82";
+
+    if (nombre !== initialNombre || color !== initialColor) {
+      setHasChanges(true);
+    } else {
+      setHasChanges(false);
+    }
+  }, [nombre, color, materia]);
+
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.modalBackground}>
-        <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+        <View style={styles.modalContainer}>
+          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
             <Icon name="close" size={24} color="#333" />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>
@@ -106,7 +139,7 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
             value={nombre}
             onChangeText={setNombre}
             style={styles.input}
-            placeholder="Ej. Calculo I"
+            placeholder="Ej. Cálculo I"
             placeholderTextColor="#888"
           />
           <Text style={styles.label}>Color:</Text>
@@ -128,24 +161,7 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
           <TouchableOpacity onPress={handleGuardar} style={styles.saveButton}>
             <Text style={styles.saveButtonText}>Guardar</Text>
           </TouchableOpacity>
-          {materia && (
-            <TouchableOpacity
-              onPress={() =>
-                Alert.alert("Confirm Delete", "Do you want to delete?", [
-                  { text: "Cancel", style: "cancel" },
-                  {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: handleEliminar,
-                  },
-                ])
-              }
-              style={styles.deleteButton}
-            >
-              <Text style={styles.deleteButtonText}>Borrar</Text>
-            </TouchableOpacity>
-          )}
-        </Animated.View>
+        </View>
       </View>
     </Modal>
   );
@@ -156,15 +172,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContainer: {
     backgroundColor: "white",
     padding: 20,
     borderRadius: 15,
-    width: "85%",
+    width: "90%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
-    elevation: 10,
+    shadowRadius: 4,
+    elevation: 5,
   },
   closeButton: { position: "absolute", right: 10, top: 10 },
   modalTitle: {
@@ -201,7 +220,6 @@ const styles = StyleSheet.create({
   colorSelected: {
     borderWidth: 2,
     borderColor: "white",
-    backgroundColor: "rgba(0, 0, 0, 0.2)",
   },
   saveButton: {
     backgroundColor: "#34a853",
@@ -211,12 +229,4 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   saveButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
-  deleteButton: {
-    backgroundColor: "red",
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  deleteButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
 });
