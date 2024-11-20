@@ -354,6 +354,7 @@ export default function FormularioTareaModal({
               visible={materiaModalVisible}
               onClose={() => setMateriaModalVisible(false)}
               materia={materiaSeleccionada} // undefined para crear, materia para editar
+              onSave={() => setMateriaModalVisible(false)}
             />
 
             <Modal
