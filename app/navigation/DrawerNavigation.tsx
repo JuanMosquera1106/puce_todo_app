@@ -13,6 +13,9 @@ import { useCalendar } from "../../context/CalendarContext";
 import { useTareas } from "../../context/TareasContext";
 import { MateriaModal } from "../../components/MateriaModal";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import Guide from "../../components/Guide";
+import { Modal } from "react-native";
+
 
 const DrawerNavigation: React.FC<any> = (props) => {
   const { materiasGlobales, setMateriasGlobales } = useCalendar();
@@ -21,6 +24,7 @@ const DrawerNavigation: React.FC<any> = (props) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [menuVisibleId, setMenuVisibleId] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [guiaVisible, setGuiaVisible] = useState(false); // Estado para la visibilidad de Guide
 
   const handleEditar = (materiaId: string) => {
     setMateriaSeleccionada(materiaId);
@@ -174,11 +178,17 @@ const DrawerNavigation: React.FC<any> = (props) => {
 
         <TouchableOpacity
           style={styles.drawerItem}
-          onPress={() => props.navigation.navigate("Ayuda")}
+          onPress={() => setGuiaVisible(true)}
         >
           <Icon name="help" size={20} color="#555" style={styles.drawerIcon} />
-          <Text style={styles.drawerText}>Ayuda</Text>
+          <Text style={styles.drawerText}>Guía Rápida</Text>
         </TouchableOpacity>
+
+        {/* Modal para mostrar Guide */}
+        <Modal visible={guiaVisible} animationType="slide" transparent={false}>
+          <Guide onDone={() => setGuiaVisible(false)} />
+        </Modal>
+        
       </DrawerContentScrollView>
 
       {/* Botón Flotante para Agregar Materias */}
