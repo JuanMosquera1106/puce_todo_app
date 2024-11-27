@@ -55,31 +55,14 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
     cargarTareasDesdeStorage();
   }, [cargarTareasDesdeStorage]); // Incluir la función en el array de dependencias
 
-  // Función para mapear el ID de la materia al nombre (event)
-  const mapearMateria = async (materiaId: string): Promise<string | null> => {
-    try {
-      const materiasGuardadas = await AsyncStorage.getItem("materiasGlobales");
-      if (materiasGuardadas) {
-        const materias = JSON.parse(materiasGuardadas);
-        const materiaEncontrada = materias.find(
-          (materia: { id: string; event: string }) => materia.id === materiaId
-        );
-        return materiaEncontrada ? materiaEncontrada.event : null; // Retorna el nombre de la materia
-      }
-    } catch (error) {
-      console.error("Error al mapear materia:", error);
-    }
-    return null; // Retornar null si no se encuentra la materia
-  };
 
   // Función para transformar la tarea al formato requerido para Supabase
   const transformarTarea = async (tarea: Tarea) => {
     const { id, pomodoro, materia, ...resto } = tarea;
-    const materiaNombre = await mapearMateria(materia); // Mapear ID a nombre de materia
     return {
       ...resto,
       id_async: id, // Cambiar id a id_async
-      materia: materiaNombre || materia, // Usar el nombre mapeado o mantener el ID
+      materia: materia, // Usar el nombre mapeado o mantener el ID
       duracion: pomodoro?.duracion ?? null,
       descanso: pomodoro?.descanso ?? null,
       intervalo: pomodoro?.intervalo ?? null,

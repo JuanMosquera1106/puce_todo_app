@@ -50,6 +50,7 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
   // Transformar Materia antes de enviar a Supabase
   const transformarMateria = (materia: Materia) => {
     return {
+      id: materia.id, // Enviar el `id` nativo de la interfaz
       nombre: materia.event, // Cambiar `event` a `nombre` para enviar a la base de datos
     };
   };
@@ -79,6 +80,7 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
         );
         if (!response.ok) {
           console.error("Error al insertar materia en Supabase:", response.status);
+          console.log("Materia transformada enviada:", materiaTransformada);
         }
       } catch (error) {
         console.error("Error al enviar datos a Supabase:", error);
