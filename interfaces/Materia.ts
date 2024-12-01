@@ -1,7 +1,7 @@
 export interface Materia {
   id: string;
   time: string;
-  event: string;
+  event: string; // TODO:Nombre de la materia
   color: string;
   duration: number; // duración en bloques
 }
