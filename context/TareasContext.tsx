@@ -46,6 +46,7 @@ type TareasContextType = {
   cargando: boolean;
   agregarTarea: (tarea: Tarea) => void;
   actualizarTarea: (tarea: Tarea) => void;
+  completarTarea: (id: string) => void;
   eliminarTarea: (id: string) => void;
   setFiltroMateria: (materia: string | null) => void;
 };
@@ -94,31 +95,89 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
 
   React.useEffect(() => {
     cargarTareasDesdeStorage();
-  }, [cargarTareasDesdeStorage]); // Incluir la función en el array de dependencias
+  }, [cargarTareasDesdeStorage]);
 
-  const agregarTarea = (tarea: Tarea) => {
-    const nuevasTareas = [...tareas, tarea];
-    setTareas(nuevasTareas);
-    guardarTareasEnStorage(nuevasTareas); // Guardamos en AsyncStorage
+  // --- Completar una tarea ---
+  const completarTarea = (id: string): void => {
+    const nuevasTareas = tareas.map((tarea) => {
+      if (tarea.id === id) {
+        return { ...tarea, completada: !tarea.completada };
+      }
+
+      if (tarea.instancias) {
+        const nuevasInstancias = tarea.instancias.map((instancia) =>
+          instancia.id === id
+            ? { ...instancia, completada: !instancia.completada }
+            : instancia
+        );
+        return { ...tarea, instancias: nuevasInstancias };
+      }
+
+      return tarea;
+    });
+
+    setTareas(eliminarDuplicados(nuevasTareas));
+    guardarTareasEnStorage(nuevasTareas);
   };
 
-  const actualizarTarea = (tareaActualizada: Tarea) => {
-    const nuevasTareas = tareas.map((t) =>
-      t.id === tareaActualizada.id ? tareaActualizada : t,
-    );
+  // --- Eliminar una tarea y sus instancias ---
+  const eliminarTarea = (id: string): void => {
+    const nuevasTareas = tareas.filter((tarea) => {
+      if (tarea.id === id) return false;
+
+      if (tarea.instancias) {
+        tarea.instancias = tarea.instancias.filter((instancia) => instancia.id !== id);
+      }
+
+      return true;
+    });
+
     setTareas(nuevasTareas);
-    guardarTareasEnStorage(nuevasTareas); // Guardamos en AsyncStorage
+    guardarTareasEnStorage(nuevasTareas);
   };
 
-  const eliminarTarea = (id: string) => {
-    const nuevasTareas = tareas.filter((tarea) => tarea.id !== id);
-    setTareas(nuevasTareas);
-    guardarTareasEnStorage(nuevasTareas); // Guardamos en AsyncStorage
+  // --- Agregar una nueva tarea ---
+  const agregarTarea = (nuevaTarea: Tarea): void => {
+    const nuevasInstancias = generarFechasRepetidas(nuevaTarea);
+    const nuevasTareas = [...tareas, nuevaTarea, ...nuevasInstancias];
+    setTareas(eliminarDuplicados(nuevasTareas));
+    guardarTareasEnStorage(nuevasTareas);
   };
 
-  const [filtroMateria, setFiltroMateria] = useState<string | null>(null);
+  // --- Actualizar una tarea ---
+  const actualizarTarea = (tareaActualizada: Tarea): void => {
+    const nuevasTareas = tareas.map((tarea) => {
+      // Si es la tarea principal (sin id con fecha)
+      if (tarea.id === tareaActualizada.id && !tarea.id.includes("-")) {
+        // Regenerar las instancias desde cero
+        const nuevasInstancias =
+          tareaActualizada.repetir !== "No repetir"
+            ? generarFechasRepetidas(tareaActualizada).map((instancia) => {
+                // Buscar si la instancia ya estaba completada y mantener ese estado
+                const instanciaExistente = tarea.instancias?.find(
+                  (i) => i.id === instancia.id
+                );
+                return instanciaExistente && instanciaExistente.completada
+                  ? { ...instancia, completada: true }
+                  : instancia;
+              })
+            : []; // Si no se repite, no generamos nuevas instancias
 
-  // Función para aplicar el filtro
+        return {
+          ...tareaActualizada,
+          instancias: nuevasInstancias,
+        };
+      }
+
+      // No permitir editar instancias directamente
+      return tarea;
+    });
+
+    setTareas(eliminarDuplicados(nuevasTareas));
+    guardarTareasEnStorage(nuevasTareas);
+  };
+
+  // --- Aplicar filtro por materia ---
   const obtenerTareasFiltradas = useCallback(() => {
     if (!filtroMateria) return tareas; // Si no hay filtro, retornar todas
     return tareas.filter((tarea) => tarea.materia === filtroMateria);
@@ -126,17 +185,17 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <TareasContext.Provider
-    value={{
-      tareas: obtenerTareasFiltradas(), // Solo devuelve tareas filtradas
-      cargando,
-      agregarTarea,
-      actualizarTarea,
-      eliminarTarea,
-      setFiltroMateria, // Exponemos el setter del filtro
-    }}
-  >
-    {children}
-  </TareasContext.Provider>
-
+      value={{
+        tareas: obtenerTareasFiltradas(),
+        cargando,
+        agregarTarea,
+        actualizarTarea,
+        completarTarea,
+        eliminarTarea,
+        setFiltroMateria,
+      }}
+    >
+      {children}
+    </TareasContext.Provider>
   );
 };
