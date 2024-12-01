@@ -147,35 +147,49 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
   // --- Actualizar una tarea ---
   const actualizarTarea = (tareaActualizada: Tarea): void => {
     const nuevasTareas = tareas.map((tarea) => {
-      // Si es la tarea principal (sin id con fecha)
+      // Si es la tarea principal (sin sufijo de fecha)
       if (tarea.id === tareaActualizada.id && !tarea.id.includes("-")) {
-        // Regenerar las instancias desde cero
+        // Si el campo repetir ha cambiado, regenerar las instancias
         const nuevasInstancias =
           tareaActualizada.repetir !== "No repetir"
             ? generarFechasRepetidas(tareaActualizada).map((instancia) => {
-                // Buscar si la instancia ya estaba completada y mantener ese estado
+                // Buscar las instancias completadas anteriores y mantenerlas completadas
                 const instanciaExistente = tarea.instancias?.find(
                   (i) => i.id === instancia.id
                 );
                 return instanciaExistente && instanciaExistente.completada
-                  ? { ...instancia, completada: true }
+                  ? { ...instancia, completada: true }  // Mantener como completada si ya lo estaba
                   : instancia;
               })
             : []; // Si no se repite, no generamos nuevas instancias
-
-        return {
-          ...tareaActualizada,
-          instancias: nuevasInstancias,
-        };
+  
+        // Actualizar la tarea principal y sus nuevas instancias
+        return { ...tareaActualizada, instancias: nuevasInstancias };
       }
-
-      // No permitir editar instancias directamente
-      return tarea;
+  
+      // Si es una instancia repetida de una tarea, solo actualizamos el campo "completada"
+      if (tarea.instancias) {
+        const nuevasInstancias = tarea.instancias.map((instancia) => {
+          if (instancia.id === tareaActualizada.id) {
+            return {
+              ...instancia,
+              // Solo actualizamos completada, no los otros campos como nombre o prioridad
+              completada: tareaActualizada.completada,
+            };
+          }
+          return instancia; // Mantener las demás instancias sin cambios
+        });
+  
+        return { ...tarea, instancias: nuevasInstancias };
+      }
+  
+      return tarea; // Si no es la tarea principal ni una instancia, no hacemos cambios
     });
-
+  
+    // Actualizamos el estado y almacenamiento con las nuevas tareas
     setTareas(eliminarDuplicados(nuevasTareas));
     guardarTareasEnStorage(nuevasTareas);
-  };
+  };  
 
   // --- Aplicar filtro por materia ---
   const obtenerTareasFiltradas = useCallback(() => {

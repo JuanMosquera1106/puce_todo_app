@@ -213,7 +213,7 @@ const PerformanceDashboard = () => {
         ListEmptyComponent={
           <Text style={styles.emptyMessage}>No hay tareas en esta categoría.</Text>
         }
-        contentContainerStyle={{ paddingBottom: 16 }}
+        contentContainerStyle={{ paddingBottom: 16}}
       />
     </View>
   );
