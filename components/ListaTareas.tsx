@@ -37,7 +37,7 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
   mostrarAtrasadas,
   mostrarPendientes,
 }) => {
-  const { tareas, cargando, eliminarTarea, actualizarTarea } = useTareas();
+  const { tareas, cargando, eliminarTarea, actualizarTarea, completarTarea } = useTareas();
   const [tareasFiltradas, setTareasFiltradas] = useState<Tarea[]>([]);
   const [tareasCompletadas, setTareasCompletadas] = useState<Tarea[]>([]);
   const [tareasIncompletas, setTareasIncompletas] = useState<Tarea[]>([]);
@@ -48,46 +48,43 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
 
   useEffect(() => {
     if (tareas) {
-      const tareasDelDia = tareas.filter(
-        (tarea) =>
-          tarea.fechaVencimiento ===
-          moment(fechaSeleccionada).format("YYYY-MM-DD"),
+      // Combina tareas principales e instancias
+      const todasLasTareas = tareas.flatMap((tarea) => [
+        tarea,
+        ...(tarea.instancias || []),
+      ]);
+  
+      // Elimina duplicados
+      const tareasUnicas = [...new Map(todasLasTareas.map((t) => [t.id, t])).values()];
+  
+      // Filtra tareas del día seleccionado
+      const tareasDelDia = tareasUnicas.filter((tarea) =>
+        moment(tarea.fechaVencimiento).isSame(moment(fechaSeleccionada), "day")
       );
-
+  
       setTareaCreadaHoy(tareasDelDia.length > 0);
-
-      const tareasNoCompletadas = tareasDelDia.filter(
-        (tarea) => !tarea.completada,
-      );
-      const tareasCompletadas = tareasDelDia.filter(
-        (tarea) => tarea.completada,
-      );
-
+  
+      // Divide en completadas y no completadas
+      const tareasNoCompletadas = tareasDelDia.filter((tarea) => !tarea.completada);
+      const tareasCompletadas = tareasDelDia.filter((tarea) => tarea.completada);
+  
       setTareasFiltradas(
         tareasNoCompletadas
           .filter((tarea) => mostrarPendientes)
-          .sort(
-            (a, b) => prioridadValor[b.prioridad] - prioridadValor[a.prioridad],
-          ),
+          .sort((a, b) => prioridadValor[b.prioridad] - prioridadValor[a.prioridad])
       );
-
+  
       setTareasCompletadas(mostrarCompletadas ? tareasCompletadas : []);
-
-      const tareasIncompletasPasadas = tareas.filter(
+  
+      const tareasIncompletasPasadas = tareasUnicas.filter(
         (tarea) =>
           tarea.fechaVencimiento < moment().format("YYYY-MM-DD") &&
           !tarea.completada &&
-          mostrarAtrasadas,
+          mostrarAtrasadas
       );
       setTareasIncompletas(tareasIncompletasPasadas);
     }
-  }, [
-    tareas,
-    fechaSeleccionada,
-    mostrarCompletadas,
-    mostrarAtrasadas,
-    mostrarPendientes,
-  ]);
+  }, [tareas, fechaSeleccionada, mostrarCompletadas, mostrarAtrasadas, mostrarPendientes]);  
 
   if (cargando) {
     return (
@@ -98,10 +95,10 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
     );
   }
 
-  const handleCompletarTarea = (tarea: Tarea) => {
-    const tareaActualizada = { ...tarea, completada: !tarea.completada };
-    actualizarTarea(tareaActualizada);
+  const handleCompletarTarea = (id: string) => {
+    completarTarea(id); // Llama al contexto
   };
+  
 
   const handleEliminarTarea = (id: string) => {
     eliminarTarea(id);
@@ -158,11 +155,11 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
         <View>
           {tareasFiltradas.map((item: Tarea) => (
   <TareaCard
-    key={item.id}
+    key={item.id || `${item.nombre}-${item}`} // Genera claves únicas
     tarea={item}
     onEdit={() => handleAbrirModal(item)}
     onDelete={() => handleEliminarTarea(item.id)}
-    onComplete={() => handleCompletarTarea(item)}
+    onComplete={() => handleCompletarTarea(item.id)}
     onPlay={() => handleIniciarCronometro(item)}
     completada={item.completada}
     customStyle={styles.tareaPendiente}
@@ -197,7 +194,7 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
             tarea={item}
             onEdit={() => handleAbrirModal(item)}
             onDelete={() => handleEliminarTarea(item.id)}
-            onComplete={() => handleCompletarTarea(item)}
+            onComplete={() => handleCompletarTarea(item.id)}
             onPlay={() => handleIniciarCronometro(item)}
             completada={item.completada}
             customStyle={styles.tareaCompletada}
@@ -236,7 +233,7 @@ const ListaTareas: React.FC<ListaTareasProps> = ({
             tarea={item}
             onEdit={() => handleAbrirModal(item)}
             onDelete={() => handleEliminarTarea(item.id)}
-            onComplete={() => handleCompletarTarea(item)}
+            onComplete={() => handleCompletarTarea(item.id)}
             onPlay={() => handleIniciarCronometro(item)}
             completada={item.completada}
             customStyle={styles.tareaAtrasada}

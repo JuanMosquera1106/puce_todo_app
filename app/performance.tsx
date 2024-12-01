@@ -26,22 +26,32 @@ const PerformanceDashboard = () => {
   const [modalOpacity] = useState(new Animated.Value(0));
 
   useEffect(() => {
-    const completadas = tareas.filter((tarea) => tarea.completada).length;
+    // Desenredar las instancias de tareas repetidas
+    const todasLasTareas = tareas.flatMap((tarea) => [
+      tarea,
+      ...(tarea.instancias || []),
+    ]);
+  
+    // Calcular tareas completadas
+    const completadas = todasLasTareas.filter((tarea) => tarea.completada).length;
     setTareasCompletadas(completadas);
-
-    const incompletas = tareas.filter(
+  
+    // Calcular tareas incompletas
+    const incompletas = todasLasTareas.filter(
       (tarea) =>
         tarea.fechaVencimiento < moment().format("YYYY-MM-DD") && !tarea.completada
     ).length;
     setTareasIncompletas(incompletas);
-
-    const pendientes = tareas.filter(
+  
+    // Calcular tareas pendientes
+    const pendientes = todasLasTareas.filter(
       (tarea) =>
         !tarea.completada &&
         tarea.fechaVencimiento >= moment().format("YYYY-MM-DD")
     ).length;
     setTareasPendientes(pendientes);
-
+  
+    // Generar consejos según el número de tareas completadas
     if (completadas === 0) {
       setConsejos("¡Intenta completar al menos una tarea hoy!");
     } else if (completadas < 5) {
@@ -51,31 +61,37 @@ const PerformanceDashboard = () => {
     } else {
       setConsejos("¡Excelente! Sigue así y establece nuevos objetivos.");
     }
-  }, [tareas]);
+  }, [tareas]);  
 
   useEffect(() => {
     filtrarTareas(estadoSeleccionado);
   }, [estadoSeleccionado, tareas]);
 
   const filtrarTareas = (estado: string) => {
+    // Desenredar todas las tareas, incluyendo instancias
+    const todasLasTareas = tareas.flatMap((tarea) => [
+      tarea,
+      ...(tarea.instancias || []),
+    ]);
+  
     let filtradas: any[] = [];
     if (estado === "Completas") {
-      filtradas = tareas.filter((tarea) => tarea.completada);
+      filtradas = todasLasTareas.filter((tarea) => tarea.completada);
     } else if (estado === "Incompletas") {
-      filtradas = tareas.filter(
+      filtradas = todasLasTareas.filter(
         (tarea) =>
           tarea.fechaVencimiento < moment().format("YYYY-MM-DD") &&
           !tarea.completada
       );
     } else if (estado === "Pendientes") {
-      filtradas = tareas.filter(
+      filtradas = todasLasTareas.filter(
         (tarea) =>
           !tarea.completada &&
           tarea.fechaVencimiento >= moment().format("YYYY-MM-DD")
       );
     }
     setTareasFiltradas(filtradas);
-  };
+  };  
 
   const showModal = () => {
     setModalVisible(true);

@@ -21,12 +21,13 @@ interface TareaCardProps {
   tarea: Tarea;
   onEdit: () => void;
   onDelete: () => void;
-  onComplete: () => void;
+  onComplete: (id: string) => void; // Siempre envía el ID
   onPlay: () => void;
   completada: boolean;
   customStyle?: object;
 }
 
+// Prefijo según prioridad
 const getPriorityPrefix = (prioridad: string) => {
   switch (prioridad) {
     case "Alta":
@@ -76,25 +77,35 @@ const TareaCard: React.FC<TareaCardProps> = ({
     outputRange: [0, 1],
   });
 
+  // Manejar el completado de tareas
   const handleComplete = () => {
-    setIsCompleted(!isCompleted);
-    onComplete();
-  };
+    onComplete(tarea.id); // Asegúrate de que pase el ID
+  };  
 
+  // Confirmar eliminación de tareas o mostrar restricción para instancias
   const confirmDelete = () => {
+    if (tarea.id.includes("-")) {
+      Alert.alert(
+        "Eliminar no permitido",
+        "No puedes eliminar directamente una instancia repetida. Elimina la tarea principal para borrar todas las instancias.",
+        [{ text: "Entendido", style: "cancel" }]
+      );
+      return;
+    }
+
     Alert.alert(
       "Eliminar tarea",
       "¿Estás seguro de que quieres eliminar esta tarea?",
       [
         { text: "Cancelar", style: "cancel" },
         { text: "Eliminar", onPress: onDelete },
-      ],
+      ]
     );
   };
 
   const renderRightActions = (
     progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>
   ) => {
     const scale = dragX.interpolate({
       inputRange: [-100, 0],
@@ -160,6 +171,7 @@ const TareaCard: React.FC<TareaCardProps> = ({
   );
 };
 
+// --- Estilos ---
 const styles = StyleSheet.create({
   card: {
     borderLeftWidth: 5,

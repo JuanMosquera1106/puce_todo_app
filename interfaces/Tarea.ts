@@ -1,14 +1,15 @@
 export interface Tarea {
   id: string;
   nombre: string;
-  prioridad: "Baja" | "Media" | "Alta";
+  prioridad: "Alta" | "Media" | "Baja";
   materia: string;
   fechaVencimiento: string;
-  repetir?: string | null; // "Diario", "Semanal", etc. o null si no se repite
+  repetir?: string; // Ejemplo: "Diario", "Semanal"
+  completada: boolean;
   pomodoro?: {
-    duracion: number; // En minutos
-    descanso: number; // En minutos
+    duracion: number; // Duración en minutos
+    descanso: number; // Tiempo de descanso en minutos
     intervalo: number; // Número de ciclos
   };
-  completada: boolean;
+  instancias?: Tarea[]; // Instancias repetidas generadas
 }
