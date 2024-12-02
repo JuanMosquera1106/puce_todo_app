@@ -8,9 +8,15 @@ const generarFechasRepetidas = (tarea: Tarea): Tarea[] => {
   if (!tarea.repetir || tarea.repetir === "No repetir") return [];
 
   const instancias: Tarea[] = [];
-  let fechaActual = moment(tarea.fechaVencimiento).subtract(1, "day");
+  let fechaActual = moment(tarea.fechaVencimiento).subtract(1, "day");  // Empezamos desde un día antes de la fecha de vencimiento
 
   while (fechaActual.isSameOrAfter(moment().startOf("day"))) {
+    // Solo evitar la generación en el día anterior a la fecha de vencimiento si la repetición es semanal o mensual
+    if ((tarea.repetir === "Semanal" || tarea.repetir === "Mensual") && fechaActual.isSame(moment(tarea.fechaVencimiento).subtract(1, "day"), "day")) {
+      fechaActual.subtract(1, tarea.repetir === "Semanal" ? "week" : "month");  // Saltamos la fecha de vencimiento
+      continue;  // Continuamos al siguiente ciclo sin agregar esta fecha
+    }
+
     instancias.push({
       ...tarea,
       id: `${tarea.id}-${fechaActual.format("YYYY-MM-DD")}`,
@@ -19,6 +25,7 @@ const generarFechasRepetidas = (tarea: Tarea): Tarea[] => {
       completada: false,
     });
 
+    // Ajustar la fecha según el tipo de repetición
     switch (tarea.repetir) {
       case "Diario":
         fechaActual.subtract(1, "day");
@@ -144,52 +151,55 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
     guardarTareasEnStorage(nuevasTareas);
   };
 
-  // --- Actualizar una tarea ---
-  const actualizarTarea = (tareaActualizada: Tarea): void => {
-    const nuevasTareas = tareas.map((tarea) => {
-      // Si es la tarea principal (sin sufijo de fecha)
-      if (tarea.id === tareaActualizada.id && !tarea.id.includes("-")) {
-        // Si el campo repetir ha cambiado, regenerar las instancias
-        const nuevasInstancias =
-          tareaActualizada.repetir !== "No repetir"
-            ? generarFechasRepetidas(tareaActualizada).map((instancia) => {
-                // Buscar las instancias completadas anteriores y mantenerlas completadas
-                const instanciaExistente = tarea.instancias?.find(
-                  (i) => i.id === instancia.id
-                );
-                return instanciaExistente && instanciaExistente.completada
-                  ? { ...instancia, completada: true }  // Mantener como completada si ya lo estaba
-                  : instancia;
-              })
-            : []; // Si no se repite, no generamos nuevas instancias
-  
-        // Actualizar la tarea principal y sus nuevas instancias
-        return { ...tareaActualizada, instancias: nuevasInstancias };
+ // --- Actualizar una tarea ---
+const actualizarTarea = (tareaActualizada: Tarea): void => {
+  const nuevasTareas = tareas.map((tarea) => {
+    // Si es la tarea principal (sin sufijo de fecha)
+    if (tarea.id === tareaActualizada.id && !tarea.id.includes("-")) {
+      // Si el campo repetir, nombre o materia ha cambiado, eliminamos las instancias previas
+      let nuevasInstancias: Tarea[] = [];
+
+      // Solo regeneramos las instancias si cambia el nombre, materia o repetir
+      if (
+        tarea.repetir !== tareaActualizada.repetir ||
+        tarea.nombre !== tareaActualizada.nombre ||
+        tarea.materia !== tareaActualizada.materia
+      ) {
+        nuevasInstancias = generarFechasRepetidas(tareaActualizada).map((instancia) => ({
+          ...instancia,
+          nombre: tareaActualizada.nombre,    // Actualizar el nombre de la instancia
+          materia: tareaActualizada.materia,  // Actualizar la materia de la instancia
+          completada: tarea.instancias?.find(i => i.id === instancia.id)?.completada || false, // Mantener completada si ya estaba
+        }));
       }
-  
-      // Si es una instancia repetida de una tarea, solo actualizamos el campo "completada"
-      if (tarea.instancias) {
-        const nuevasInstancias = tarea.instancias.map((instancia) => {
-          if (instancia.id === tareaActualizada.id) {
-            return {
-              ...instancia,
-              // Solo actualizamos completada, no los otros campos como nombre o prioridad
-              completada: tareaActualizada.completada,
-            };
-          }
-          return instancia; // Mantener las demás instancias sin cambios
-        });
-  
-        return { ...tarea, instancias: nuevasInstancias };
-      }
-  
-      return tarea; // Si no es la tarea principal ni una instancia, no hacemos cambios
-    });
-  
-    // Actualizamos el estado y almacenamiento con las nuevas tareas
-    setTareas(eliminarDuplicados(nuevasTareas));
-    guardarTareasEnStorage(nuevasTareas);
-  };  
+
+      // Actualizar la tarea principal con las nuevas instancias
+      return { ...tareaActualizada, instancias: nuevasInstancias };
+    }
+
+    // Si es una instancia repetida de una tarea, solo actualizamos el campo "completada"
+    if (tarea.instancias) {
+      const nuevasInstancias = tarea.instancias.map((instancia) => {
+        // Las instancias no deben permitir editar nombre ni materia
+        if (instancia.id === tareaActualizada.id) {
+          return {
+            ...instancia,
+            completada: tareaActualizada.completada, // Solo actualizamos el campo "completada"
+          };
+        }
+        return instancia; // Mantener las demás instancias sin cambios
+      });
+
+      return { ...tarea, instancias: nuevasInstancias };
+    }
+
+    return tarea; // Si no es la tarea principal ni una instancia, no hacemos cambios
+  });
+
+  // Actualizamos el estado y almacenamiento con las nuevas tareas
+  setTareas(eliminarDuplicados(nuevasTareas));
+  guardarTareasEnStorage(nuevasTareas);
+};
 
   // --- Aplicar filtro por materia ---
   const obtenerTareasFiltradas = useCallback(() => {

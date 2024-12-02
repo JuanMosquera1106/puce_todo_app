@@ -627,9 +627,9 @@ export default function FormularioTareaModal({
                           ) => setTareaPrioridad(itemValue)}
                           style={{ height: 50, width: "100%", color: "#333" }}
                         >
-                          <Picker.Item label="Baja" value="Baja" />
-                          <Picker.Item label="Media" value="Media" />
-                          <Picker.Item label="Alta" value="Alta" />
+                          <Picker.Item label="!Baja" value="Baja" />
+                          <Picker.Item label="!!Media" value="Media" />
+                          <Picker.Item label="!!!Alta" value="Alta" />
                         </Picker>
                       )}
                     </View>
