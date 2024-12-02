@@ -18,7 +18,7 @@ import { Modal } from "react-native";
 
 
 const DrawerNavigation: React.FC<any> = (props) => {
-  const { materiasGlobales, setMateriasGlobales } = useCalendar();
+  const { materiasGlobales, editarMateria, eliminarMateria } = useCalendar();
   const { setFiltroMateria } = useTareas(); // Para filtrar tareas por materia
   const [materiaSeleccionada, setMateriaSeleccionada] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -33,34 +33,19 @@ const DrawerNavigation: React.FC<any> = (props) => {
     setMenuVisibleId(null);
   };
 
-  const handleEliminar = (materiaId: string) => {
-    Alert.alert(
-      "Confirmar eliminación",
-      "¿Estás seguro de que deseas eliminar esta materia?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          onPress: () => {
-            setMateriasGlobales((prev) =>
-              prev.filter((materia) => materia.id !== materiaId)
-            );
-            ToastAndroid.show("Materia eliminada", ToastAndroid.SHORT);
-            setMenuVisibleId(null);
-          },
-          style: "destructive",
-        },
-      ]
-    );
-  };
 
+  const handleEliminar = (materiaId: string) => {
+    eliminarMateria(materiaId); // Usar la función eliminarMateria del contexto
+    setMenuVisibleId(null);
+  };
+  
   const handleAgregarMateria = () => {
     setMateriaSeleccionada(null);
     setModalVisible(true);
     setHasUnsavedChanges(false);
   };
 
-  const handleCloseModal = (isSaved: boolean) => {
+  const handleCloseModal = (isSaved: boolean, updatedMateria?: any) => {
     if (!isSaved && hasUnsavedChanges) {
       Alert.alert(
         "Cambios sin guardar",
@@ -81,13 +66,9 @@ const DrawerNavigation: React.FC<any> = (props) => {
     } else {
       setModalVisible(false);
       setMateriaSeleccionada(null);
-      if (isSaved) {
-        ToastAndroid.show(
-          materiaSeleccionada
-            ? "Materia editada correctamente"
-            : "Materia creada correctamente",
-          ToastAndroid.SHORT
-        );
+      if (isSaved && updatedMateria && materiaSeleccionada) {
+        editarMateria(materiaSeleccionada, updatedMateria); // Cambiado: usar la función editarMateria
+        ToastAndroid.show("Materia editada correctamente", ToastAndroid.SHORT);
       }
     }
   };
