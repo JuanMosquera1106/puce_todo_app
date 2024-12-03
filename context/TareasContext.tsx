@@ -8,13 +8,15 @@ const generarFechasRepetidas = (tarea: Tarea): Tarea[] => {
   if (!tarea.repetir || tarea.repetir === "No repetir") return [];
 
   const instancias: Tarea[] = [];
-  let fechaActual = moment(tarea.fechaVencimiento).subtract(1, "day");  // Empezamos desde un día antes de la fecha de vencimiento
+  let fechaActual = moment(tarea.fechaVencimiento).subtract(1, "day");
 
   while (fechaActual.isSameOrAfter(moment().startOf("day"))) {
-    // Solo evitar la generación en el día anterior a la fecha de vencimiento si la repetición es semanal o mensual
-    if ((tarea.repetir === "Semanal" || tarea.repetir === "Mensual") && fechaActual.isSame(moment(tarea.fechaVencimiento).subtract(1, "day"), "day")) {
-      fechaActual.subtract(1, tarea.repetir === "Semanal" ? "week" : "month");  // Saltamos la fecha de vencimiento
-      continue;  // Continuamos al siguiente ciclo sin agregar esta fecha
+    if (
+      (tarea.repetir === "Semanal" || tarea.repetir === "Mensual") &&
+      fechaActual.isSame(moment(tarea.fechaVencimiento).subtract(1, "day"), "day")
+    ) {
+      fechaActual.subtract(1, tarea.repetir === "Semanal" ? "week" : "month");
+      continue;
     }
 
     instancias.push({
@@ -25,7 +27,6 @@ const generarFechasRepetidas = (tarea: Tarea): Tarea[] => {
       completada: false,
     });
 
-    // Ajustar la fecha según el tipo de repetición
     switch (tarea.repetir) {
       case "Diario":
         fechaActual.subtract(1, "day");
@@ -51,8 +52,8 @@ const eliminarDuplicados = (tareas: Tarea[]): Tarea[] => {
 type TareasContextType = {
   tareas: Tarea[];
   cargando: boolean;
-  agregarTarea: (tarea: Tarea) => void;
-  actualizarTarea: (tarea: Tarea) => void;
+  agregarTarea: (tarea: Tarea) => Promise<void>;
+  actualizarTarea: (tarea: Tarea) => Promise<void>;
   completarTarea: (id: string) => void;
   eliminarTarea: (id: string) => void;
   setFiltroMateria: (materia: string | null) => void;
@@ -111,15 +112,6 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
         return { ...tarea, completada: !tarea.completada };
       }
 
-      if (tarea.instancias) {
-        const nuevasInstancias = tarea.instancias.map((instancia) =>
-          instancia.id === id
-            ? { ...instancia, completada: !instancia.completada }
-            : instancia
-        );
-        return { ...tarea, instancias: nuevasInstancias };
-      }
-
       return tarea;
     });
 
@@ -127,83 +119,106 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
     guardarTareasEnStorage(nuevasTareas);
   };
 
-  // --- Eliminar una tarea y sus instancias ---
+  // --- Eliminar una tarea ---
   const eliminarTarea = (id: string): void => {
-    const nuevasTareas = tareas.filter((tarea) => {
-      if (tarea.id === id) return false;
-
-      if (tarea.instancias) {
-        tarea.instancias = tarea.instancias.filter((instancia) => instancia.id !== id);
-      }
-
-      return true;
-    });
+    const nuevasTareas = tareas.filter((tarea) => tarea.id !== id);
 
     setTareas(nuevasTareas);
     guardarTareasEnStorage(nuevasTareas);
   };
 
-  // --- Agregar una nueva tarea ---
-  const agregarTarea = (nuevaTarea: Tarea): void => {
-    const nuevasInstancias = generarFechasRepetidas(nuevaTarea);
-    const nuevasTareas = [...tareas, nuevaTarea, ...nuevasInstancias];
-    setTareas(eliminarDuplicados(nuevasTareas));
-    guardarTareasEnStorage(nuevasTareas);
+  // --- Función para transformar la tarea al formato requerido para Supabase ---
+  const transformarTarea = (tarea: Tarea) => {
+    const { id, pomodoro, ...resto } = tarea;
+    return {
+      ...resto,
+      id_async: id, // Usar id como id_async en Supabase
+      duracion: pomodoro?.duracion ?? null,
+      descanso: pomodoro?.descanso ?? null,
+      intervalo: pomodoro?.intervalo ?? null,
+    };
   };
 
- // --- Actualizar una tarea ---
-const actualizarTarea = (tareaActualizada: Tarea): void => {
-  const nuevasTareas = tareas.map((tarea) => {
-    // Si es la tarea principal (sin sufijo de fecha)
-    if (tarea.id === tareaActualizada.id && !tarea.id.includes("-")) {
-      // Si el campo repetir, nombre o materia ha cambiado, eliminamos las instancias previas
-      let nuevasInstancias: Tarea[] = [];
-
-      // Solo regeneramos las instancias si cambia el nombre, materia o repetir
-      if (
-        tarea.repetir !== tareaActualizada.repetir ||
-        tarea.nombre !== tareaActualizada.nombre ||
-        tarea.materia !== tareaActualizada.materia
-      ) {
-        nuevasInstancias = generarFechasRepetidas(tareaActualizada).map((instancia) => ({
-          ...instancia,
-          nombre: tareaActualizada.nombre,    // Actualizar el nombre de la instancia
-          materia: tareaActualizada.materia,  // Actualizar la materia de la instancia
-          completada: tarea.instancias?.find(i => i.id === instancia.id)?.completada || false, // Mantener completada si ya estaba
-        }));
-      }
-
-      // Actualizar la tarea principal con las nuevas instancias
-      return { ...tareaActualizada, instancias: nuevasInstancias };
-    }
-
-    // Si es una instancia repetida de una tarea, solo actualizamos el campo "completada"
-    if (tarea.instancias) {
-      const nuevasInstancias = tarea.instancias.map((instancia) => {
-        // Las instancias no deben permitir editar nombre ni materia
-        if (instancia.id === tareaActualizada.id) {
-          return {
-            ...instancia,
-            completada: tareaActualizada.completada, // Solo actualizamos el campo "completada"
-          };
+  // --- Insertar tarea en Supabase ---
+  const insertarTareaEnSupabase = async (tarea: Tarea) => {
+    try {
+      const tareaTransformada = transformarTarea(tarea);
+      const response = await fetch(
+        "https://pcbuevklhuyxcwyfazac.supabase.co/rest/v1/Tarea",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey:
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjYnVldmtsaHV5eGN3eWZhemFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE0OTk3NzMsImV4cCI6MjA0NzA3NTc3M30.jPRuol82X1rdiQLWAPrXUsXG-vTs65I_sNzQ-QUeDog",
+          },
+          body: JSON.stringify(tareaTransformada),
         }
-        return instancia; // Mantener las demás instancias sin cambios
-      });
-
-      return { ...tarea, instancias: nuevasInstancias };
+      );
+      if (!response.ok) {
+        console.error("Error al insertar tarea en Supabase:", response.status);
+        console.log(tareaTransformada);
+      }
+    } catch (e) {
+      console.error("Error al enviar datos a Supabase", e);
     }
+  };
 
-    return tarea; // Si no es la tarea principal ni una instancia, no hacemos cambios
-  });
+  // --- Actualizar tarea en Supabase ---
+  const actualizarTareaEnSupabase = async (tarea: Tarea) => {
+    try {
+      const tareaTransformada = transformarTarea(tarea);
+      const response = await fetch(
+        `https://pcbuevklhuyxcwyfazac.supabase.co/rest/v1/Tarea?id_async=eq.${tareaTransformada.id_async}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            apikey:
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjYnVldmtsaHV5eGN3eWZhemFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE0OTk3NzMsImV4cCI6MjA0NzA3NTc3M30.jPRuol82X1rdiQLWAPrXUsXG-vTs65I_sNzQ-QUeDog",
+          },
+          body: JSON.stringify(tareaTransformada),
+        }
+      );
+      if (!response.ok) {
+        console.error("Error al actualizar tarea en Supabase:", response.status);
+      }
+    } catch (e) {
+      console.error("Error al enviar datos a Supabase para actualizar", e);
+    }
+  };
 
-  // Actualizamos el estado y almacenamiento con las nuevas tareas
-  setTareas(eliminarDuplicados(nuevasTareas));
-  guardarTareasEnStorage(nuevasTareas);
-};
+  // --- Agregar tarea ---
+  const agregarTarea = async (nuevaTarea: Tarea): Promise<void> => {
+    const nuevasInstancias = generarFechasRepetidas(nuevaTarea);
+    const nuevasTareas = [...tareas, nuevaTarea, ...nuevasInstancias];
+    const tareasSinDuplicados = eliminarDuplicados(nuevasTareas);
+
+    setTareas(tareasSinDuplicados);
+    guardarTareasEnStorage(tareasSinDuplicados);
+
+    await insertarTareaEnSupabase(nuevaTarea);
+
+    for (const instancia of nuevasInstancias) {
+      await insertarTareaEnSupabase(instancia);
+    }
+  };
+
+  // --- Actualizar tarea ---
+  const actualizarTarea = async (tareaActualizada: Tarea): Promise<void> => {
+    const nuevasTareas = tareas.map((t) =>
+      t.id === tareaActualizada.id ? tareaActualizada : t
+    );
+
+    setTareas(nuevasTareas);
+    guardarTareasEnStorage(nuevasTareas);
+
+    await actualizarTareaEnSupabase(tareaActualizada);
+  };
 
   // --- Aplicar filtro por materia ---
   const obtenerTareasFiltradas = useCallback(() => {
-    if (!filtroMateria) return tareas; // Si no hay filtro, retornar todas
+    if (!filtroMateria) return tareas;
     return tareas.filter((tarea) => tarea.materia === filtroMateria);
   }, [filtroMateria, tareas]);
 
