@@ -99,7 +99,7 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
         materia.id === materiaId ? { ...materia, ...updatedMateria } : materia
       )
     );
-
+    console.log("Materia editada:", updatedMateria);
     const enviarASupabase = async () => {
       try {
         const materiaTransformada = transformarMateria(updatedMateria);
