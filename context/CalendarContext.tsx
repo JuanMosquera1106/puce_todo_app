@@ -99,8 +99,8 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
         materia.id === materiaId ? { ...materia, ...updatedMateria } : materia
       )
     );
-
-    const enviarASupabase = async () => {
+    console.log("hola MUNDOOO");
+    const enviarASupabase = async () => { 
       try {
         const materiaTransformada = transformarMateria(updatedMateria);
         const response = await fetch(`${SUPABASE_URL}?id=eq.${materiaId}`, {

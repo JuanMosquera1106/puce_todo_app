@@ -26,7 +26,7 @@ const colorsAvailable = [
 interface MateriaModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: () => void; // Callback para indicar que se guardaron los datos
+  onSave: () => void;
   materia?: Materia;
 }
 
@@ -36,8 +36,13 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
   onSave,
   materia,
 }) => {
-  const { agregarMateriaAlContexto, materiasGlobales, setMateriasGlobales } =
-    useCalendar();
+  const {
+    agregarMateriaAlContexto,
+    editarMateria,
+    eliminarMateria,
+    materiasGlobales,
+  } = useCalendar();
+  
   const [nombre, setNombre] = useState(materia?.event || "");
   const [color, setColor] = useState(materia?.color || "#f28b82");
   const [hasChanges, setHasChanges] = useState(false);
@@ -71,31 +76,43 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
       return;
     }
 
-    const updatedMateria = materia
-      ? { ...materia, event: nombre, color }
-      : {
-          id: Math.random().toString(36).substr(2, 9),
-          event: nombre,
-          color,
-          duration: 1,
-          time: new Date().toISOString(),
-        };
-
     if (materia) {
-      // Actualizar materia existente
-      setMateriasGlobales(
-        materiasGlobales.map((mat) =>
-          mat.id === materia.id ? updatedMateria : mat
-        )
-      );
+      // Editar materia existente
+      editarMateria(materia.id, { ...materia, event: nombre, color });
     } else {
       // Agregar nueva materia
-      agregarMateriaAlContexto(updatedMateria);
+      agregarMateriaAlContexto({
+        id: Math.random().toString(36).substr(2, 9),
+        event: nombre,
+        color,
+        duration: 1,
+        time: new Date().toISOString(),
+      });
     }
 
-    setHasChanges(false); // Indicar que no hay cambios pendientes
-    onSave(); // Notificar guardado
+    setHasChanges(false);
+    onSave();
     onClose();
+  };
+
+  const handleEliminar = () => {
+    if (materia) {
+      Alert.alert(
+        "Confirmar eliminación",
+        "¿Estás seguro de que deseas eliminar esta materia?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Eliminar",
+            onPress: () => {
+              eliminarMateria(materia.id);
+              onClose();
+            },
+            style: "destructive",
+          },
+        ]
+      );
+    }
   };
 
   const handleClose = () => {
@@ -114,7 +131,6 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
   };
 
   useEffect(() => {
-    // Detectar si hubo cambios
     const initialNombre = materia?.event || "";
     const initialColor = materia?.color || "#f28b82";
 
