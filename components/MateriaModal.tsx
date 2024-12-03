@@ -39,7 +39,6 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
   const {
     agregarMateriaAlContexto,
     editarMateria,
-    eliminarMateria,
     materiasGlobales,
   } = useCalendar();
   
@@ -95,25 +94,6 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
     onClose();
   };
 
-  const handleEliminar = () => {
-    if (materia) {
-      Alert.alert(
-        "Confirmar eliminación",
-        "¿Estás seguro de que deseas eliminar esta materia?",
-        [
-          { text: "Cancelar", style: "cancel" },
-          {
-            text: "Eliminar",
-            onPress: () => {
-              eliminarMateria(materia.id);
-              onClose();
-            },
-            style: "destructive",
-          },
-        ]
-      );
-    }
-  };
 
   const handleClose = () => {
     if (hasChanges) {
