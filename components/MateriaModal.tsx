@@ -133,7 +133,11 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
           </Text>
           <TextInput
             value={nombre}
-            onChangeText={setNombre}
+            onChangeText={(text) => {
+              // Filtra caracteres no permitidos y aplica trim
+              const textoFiltrado = text.replace(/[^a-zA-Z0-9\sáéíóúÁÉÍÓÚüÜñÑ.,-]/g, "").trim();
+              setNombre(textoFiltrado);
+            }}
             style={styles.input}
             placeholder="Ej. Cálculo I"
             placeholderTextColor="#888"
@@ -218,7 +222,7 @@ const styles = StyleSheet.create({
     borderColor: "white",
   },
   saveButton: {
-    backgroundColor: "#34a853",
+    backgroundColor: "#0891b2",
     borderRadius: 8,
     paddingVertical: 10,
     alignItems: "center",

@@ -249,7 +249,7 @@ export default function FormularioTareaModal({
       prioridad: tareaPrioridad,
       materia: tareaMateria,
       fechaVencimiento: tareaFechaVencimiento,
-      repetir: repetirFrecuencia,
+      repetir: repetirFrecuencia || "No repetir",
       pomodoro: pomodoroConfig,
       completada: tareaInicial?.completada || false,
     };
@@ -304,11 +304,14 @@ export default function FormularioTareaModal({
             <StyledText className="text-lg font-semibold text-gray-700">
               Nombre de la Tarea
             </StyledText>
+
             <StyledTextInput
               className="border border-gray-200 rounded-lg px-4 py-3 mb-4"
               value={tareaNombre}
               onChangeText={(text) => {
-                if (text.length <= 30) setTareaNombre(text);
+                // Filtra caracteres no permitidos y aplica trim
+                const textoFiltrado = text.replace(/[^a-zA-Z0-9\sáéíóúÁÉÍÓÚüÜñÑ.,-]/g, "").trim();
+                if (textoFiltrado.length <= 30) setTareaNombre(textoFiltrado);
               }}
               placeholder="Nombre de la tarea"
             />
@@ -627,9 +630,9 @@ export default function FormularioTareaModal({
                           ) => setTareaPrioridad(itemValue)}
                           style={{ height: 50, width: "100%", color: "#333" }}
                         >
-                          <Picker.Item label="!Baja" value="Baja" />
-                          <Picker.Item label="!!Media" value="Media" />
-                          <Picker.Item label="!!!Alta" value="Alta" />
+                          <Picker.Item label="! Baja" value="Baja" />
+                          <Picker.Item label="!! Media" value="Media" />
+                          <Picker.Item label="!!! Alta" value="Alta" />
                         </Picker>
                       )}
                     </View>

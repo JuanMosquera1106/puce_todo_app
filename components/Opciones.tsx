@@ -19,8 +19,9 @@ const Opciones: React.FC<{
   mostrarAtrasadas,
   toggleMostrarAtrasadas,
   mostrarPendientes,
-  toggleMostrarPendientes
+  toggleMostrarPendientes,
 }) => {
+  const [activeOption, setActiveOption] = useState<string | null>(null); // Controla qué opción tiene el ojo cerrado
   const [animation] = useState(new Animated.Value(0));
 
   const openModal = () => {
@@ -44,6 +45,11 @@ const Opciones: React.FC<{
     opacity: animation,
   };
 
+  const handleOptionClick = (option: string, toggleFn: () => void) => {
+    setActiveOption((prevOption) => (prevOption === option ? null : option)); // Cambia la opción activa
+    toggleFn(); // Ejecuta la función para alternar el estado asociado
+  };
+
   useEffect(() => {
     if (visible) openModal();
   }, [visible]);
@@ -55,25 +61,25 @@ const Opciones: React.FC<{
           <Text style={styles.modalTitle}>Opciones</Text>
 
           {/* Opción para Completadas */}
-          <TouchableOpacity 
-            key={mostrarCompletadas ? "completadas-visible" : "completadas-hidden"}
-            onPress={() => { toggleMostrarCompletadas(); }}
-            style={styles.optionButton}>
+          <TouchableOpacity
+            onPress={() => handleOptionClick("completadas", toggleMostrarCompletadas)}
+            style={styles.optionButton}
+          >
             <MaterialIcons
-              name={mostrarCompletadas ? "visibility" : "visibility-off"}
+              name={activeOption === "completadas" ? "visibility-off" : "visibility"}
               size={24}
-              color="#4caf50"
+              color="gray"
             />
             <Text style={styles.optionText}>Completas</Text>
           </TouchableOpacity>
 
           {/* Opción para Atrasadas */}
-          <TouchableOpacity 
-            key={mostrarAtrasadas ? "atrasadas-visible" : "atrasadas-hidden"}
-            onPress={() => { toggleMostrarAtrasadas(); }}
-            style={styles.optionButton}>
+          <TouchableOpacity
+            onPress={() => handleOptionClick("atrasadas", toggleMostrarAtrasadas)}
+            style={styles.optionButton}
+          >
             <MaterialIcons
-              name={mostrarAtrasadas ? "visibility" : "visibility-off"}
+              name={activeOption === "atrasadas" ? "visibility-off" : "visibility"}
               size={24}
               color="#ff5722"
             />
@@ -81,14 +87,14 @@ const Opciones: React.FC<{
           </TouchableOpacity>
 
           {/* Opción para Pendientes */}
-          <TouchableOpacity 
-            key={mostrarPendientes ? "pendientes-visible" : "pendientes-hidden"}
-            onPress={() => { toggleMostrarPendientes(); }}
-            style={styles.optionButton}>
+          <TouchableOpacity
+            onPress={() => handleOptionClick("pendientes", toggleMostrarPendientes)}
+            style={styles.optionButton}
+          >
             <MaterialIcons
-              name={mostrarPendientes ? "visibility" : "visibility-off"}
+              name={activeOption === "pendientes" ? "visibility-off" : "visibility"}
               size={24}
-              color="#ffc107"
+              color="#0891b2"
             />
             <Text style={styles.optionText}>Pendientes</Text>
           </TouchableOpacity>

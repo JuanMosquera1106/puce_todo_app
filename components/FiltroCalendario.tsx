@@ -67,7 +67,7 @@ const FiltroCalendario: React.FC<CalendarioProps> = ({
           textStyle: {
             color: moment(fechaSeleccionada).isSame(today, "day")
               ? "#0000ff" // Azul cuando es la fecha actual seleccionada
-              : "#87CEFA", // Azul claro cuando la fecha actual no está seleccionada
+              : "#0000ff", // Azul claro cuando la fecha actual no está seleccionada
             fontSize: 20,
             fontWeight: "bold",
           },

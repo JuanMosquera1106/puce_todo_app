@@ -206,15 +206,42 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
 
   // --- Actualizar tarea ---
   const actualizarTarea = async (tareaActualizada: Tarea): Promise<void> => {
-    const nuevasTareas = tareas.map((t) =>
-      t.id === tareaActualizada.id ? tareaActualizada : t
+    // Filtra las tareas, eliminando instancias relacionadas con la tarea principal actualizada
+    const tareasSinInstanciasPrevias = tareas.filter(
+      (tarea) => !tarea.id.startsWith(`${tareaActualizada.id}-`)
     );
-
-    setTareas(nuevasTareas);
-    guardarTareasEnStorage(nuevasTareas);
-
+  
+    // Generar nuevas instancias si cambian las propiedades clave
+    const nuevasInstancias =
+      tareaActualizada.repetir !== "No repetir"
+        ? generarFechasRepetidas(tareaActualizada).map((instancia) => {
+            // Mantener estado completado si ya existía
+            const instanciaExistente = tareas.find((t) => t.id === instancia.id);
+            return {
+              ...instancia,
+              completada: instanciaExistente?.completada || false,
+            };
+          })
+        : [];
+  
+    // Actualizar la lista de tareas
+    const nuevasTareas = [
+      ...tareasSinInstanciasPrevias.filter((t) => t.id !== tareaActualizada.id), // Elimina la tarea principal vieja
+      { ...tareaActualizada, instancias: nuevasInstancias }, // Agrega la tarea principal actualizada
+      ...nuevasInstancias, // Agrega las nuevas instancias
+    ];
+  
+    // Actualizar el estado y almacenamiento
+    const tareasSinDuplicados = eliminarDuplicados(nuevasTareas);
+    setTareas(tareasSinDuplicados);
+    guardarTareasEnStorage(tareasSinDuplicados);
+  
+    // Actualizar en Supabase (tarea principal e instancias)
     await actualizarTareaEnSupabase(tareaActualizada);
-  };
+    for (const instancia of nuevasInstancias) {
+      await actualizarTareaEnSupabase(instancia);
+    }
+  };  
 
   // --- Aplicar filtro por materia ---
   const obtenerTareasFiltradas = useCallback(() => {

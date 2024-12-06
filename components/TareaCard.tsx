@@ -21,7 +21,7 @@ interface TareaCardProps {
   tarea: Tarea;
   onEdit: () => void;
   onDelete: () => void;
-  onComplete: (id: string) => void; // Siempre envía el ID
+  onComplete: (id: string) => void;
   onPlay: () => void;
   completada: boolean;
   customStyle?: object;
@@ -79,8 +79,8 @@ const TareaCard: React.FC<TareaCardProps> = ({
 
   // Manejar el completado de tareas
   const handleComplete = () => {
-    onComplete(tarea.id); // Asegúrate de que pase el ID
-  };  
+    onComplete(tarea.id);
+  };
 
   // Confirmar eliminación de tareas o mostrar restricción para instancias
   const confirmDelete = () => {
@@ -101,6 +101,19 @@ const TareaCard: React.FC<TareaCardProps> = ({
         { text: "Eliminar", onPress: onDelete },
       ]
     );
+  };
+
+  // Confirmar edición de instancias
+  const confirmEdit = () => {
+    if (tarea.id.includes("-")) {
+      Alert.alert(
+        "Edición no permitida",
+        "No puedes editar directamente una instancia repetida. Edita la tarea principal para modificar todas las instancias.",
+        [{ text: "Entendido", style: "cancel" }]
+      );
+      return;
+    }
+    onEdit();
   };
 
   const renderRightActions = (
@@ -127,7 +140,7 @@ const TareaCard: React.FC<TareaCardProps> = ({
       <StyledPressable
         className="p-4 mb-4 rounded-lg shadow-lg flex-row justify-between items-center"
         style={[styles.card, customStyle]}
-        onPress={onEdit}
+        onPress={confirmEdit} // Cambiar por confirmEdit
       >
         <View style={styles.itemLeft}>
           <Pressable
@@ -199,6 +212,7 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     marginLeft: 12,
+    maxWidth: "75%", // Asegura que el texto tenga espacio
   },
   itemText: {
     fontSize: 18,
