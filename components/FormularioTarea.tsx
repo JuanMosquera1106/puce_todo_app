@@ -70,20 +70,9 @@ export default function FormularioTareaModal({
   >(null);
   const [mostrarTimer, setMostrarTimer] = useState(false);
   const scaleAnim = useRef(new Animated.Value(0)).current;
-  const [nuevaMateriaModalVisible, setNuevaMateriaModalVisible] =
-    useState(false);
   const [nuevaMateriaNombre, setNuevaMateriaNombre] = useState("");
   const [nuevaMateriaColor, setNuevaMateriaColor] = useState("#f28b82");
-  const coloresDisponibles = [
-    "#f28b82",
-    "#fbbc04",
-    "#34a853",
-    "#a7ffeb",
-    "#cbf0f8",
-    "#aecbfa",
-    "#d7aefb",
-    "#a4c639",
-  ];
+
   const [materiaModalVisible, setMateriaModalVisible] = useState(false);
   const [materiaSeleccionada, setMateriaSeleccionada] = useState<
     Materia | undefined
@@ -199,7 +188,6 @@ export default function FormularioTareaModal({
     setTareaMateria(nuevaMateria.id); // Asignar el ID de la nueva materia a tareaMateria
 
     // Cerrar el modal y resetear los campos
-    setNuevaMateriaModalVisible(false);
     setNuevaMateriaNombre("");
     setNuevaMateriaColor("#f28b82");
   };
@@ -306,15 +294,16 @@ export default function FormularioTareaModal({
             </StyledText>
 
             <StyledTextInput
-              className="border border-gray-200 rounded-lg px-4 py-3 mb-4"
-              value={tareaNombre}
-              onChangeText={(text) => {
-                // Filtra caracteres no permitidos y aplica trim
-                const textoFiltrado = text.replace(/[^a-zA-Z0-9\sáéíóúÁÉÍÓÚüÜñÑ.,-]/g, "").trim();
-                if (textoFiltrado.length <= 30) setTareaNombre(textoFiltrado);
-              }}
-              placeholder="Nombre de la tarea"
-            />
+              className="text-[16px] text-black border border-gray-200 rounded-lg px-4 mt-2 py-4 mb-4"
+                value={tareaNombre}
+                onChangeText={(text) => {
+                  // Filtra caracteres no permitidos, pero permite espacios
+                  const textoFiltrado = text.replace(/[^a-zA-Z0-9\sáéíóúÁÉÍÓÚüÜñÑ.,-]/g, "");
+                  if (textoFiltrado.length <= 30) setTareaNombre(textoFiltrado);
+                }}
+                placeholder="Ej. Tarea de Programación"
+              />
+
 
             <StyledText className="text-lg font-semibold text-gray-700">
               Materia
@@ -360,91 +349,12 @@ export default function FormularioTareaModal({
               onSave={() => setMateriaModalVisible(false)}
             />
 
-            <Modal
-              visible={nuevaMateriaModalVisible}
-              transparent={true}
-              animationType="slide"
-            >
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "rgba(0, 0, 0, 0.6)",
-                }}
-              >
-                <View
-                  style={{
-                    backgroundColor: "white",
-                    padding: 20,
-                    borderRadius: 10,
-                    width: "80%",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: "bold",
-                      marginBottom: 10,
-                    }}
-                  >
-                    Nueva Materia
-                  </Text>
-                  <TextInput
-                    value={nuevaMateriaNombre}
-                    onChangeText={setNuevaMateriaNombre}
-                    style={{
-                      borderWidth: 1,
-                      borderColor: "#ccc",
-                      padding: 8,
-                      borderRadius: 5,
-                      marginBottom: 10,
-                    }}
-                    placeholder="Nombre de la materia"
-                  />
-                  <Text style={{ fontWeight: "bold" }}>Color:</Text>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      flexWrap: "wrap",
-                      marginTop: 10,
-                    }}
-                  >
-                    {coloresDisponibles.map((color) => (
-                      <TouchableOpacity
-                        key={color}
-                        onPress={() => setNuevaMateriaColor(color)}
-                        style={{
-                          backgroundColor: color,
-                          width: 30,
-                          height: 30,
-                          margin: 5,
-                          borderRadius: 15,
-                          borderWidth: color === nuevaMateriaColor ? 2 : 0,
-                          borderColor: "black",
-                        }}
-                      />
-                    ))}
-                  </View>
-                  <Button
-                    title="Guardar Materia"
-                    onPress={agregarMateriaNueva}
-                  />
-                  <Button
-                    title="Cancelar"
-                    color="red"
-                    onPress={() => setNuevaMateriaModalVisible(false)}
-                  />
-                </View>
-              </View>
-            </Modal>
-
             <StyledText className="text-lg font-semibold text-gray-700">
               Fecha de Vencimiento
             </StyledText>
             <StyledPressable onPress={() => setShowDatePicker(true)}>
               <StyledTextInput
-                className="border border-gray-200 rounded-lg px-4 py-3 mt-2 mb-4 text-gray-700"
+                className="border border-gray-200 rounded-lg px-4 py-4 mt-2 mb-4 text"
                 value={tareaFechaVencimiento}
                 editable={false}
               />

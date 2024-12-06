@@ -26,32 +26,27 @@ const PerformanceDashboard = () => {
   const [modalOpacity] = useState(new Animated.Value(0));
 
   useEffect(() => {
-    // Desenredar las instancias de tareas repetidas
     const todasLasTareas = tareas.flatMap((tarea) => [
       tarea,
       ...(tarea.instancias || []),
     ]);
-  
-    // Calcular tareas completadas
+
     const completadas = todasLasTareas.filter((tarea) => tarea.completada).length;
     setTareasCompletadas(completadas);
-  
-    // Calcular tareas incompletas
+
     const incompletas = todasLasTareas.filter(
       (tarea) =>
         tarea.fechaVencimiento < moment().format("YYYY-MM-DD") && !tarea.completada
     ).length;
     setTareasIncompletas(incompletas);
-  
-    // Calcular tareas pendientes
+
     const pendientes = todasLasTareas.filter(
       (tarea) =>
         !tarea.completada &&
         tarea.fechaVencimiento >= moment().format("YYYY-MM-DD")
     ).length;
     setTareasPendientes(pendientes);
-  
-    // Generar consejos según el número de tareas completadas
+
     if (completadas === 0) {
       setConsejos("¡Intenta completar al menos una tarea hoy!");
     } else if (completadas < 5) {
@@ -61,19 +56,18 @@ const PerformanceDashboard = () => {
     } else {
       setConsejos("¡Excelente! Sigue así y establece nuevos objetivos.");
     }
-  }, [tareas]);  
+  }, [tareas]);
 
   useEffect(() => {
     filtrarTareas(estadoSeleccionado);
   }, [estadoSeleccionado, tareas]);
 
   const filtrarTareas = (estado: string) => {
-    // Desenredar todas las tareas, incluyendo instancias
     const todasLasTareas = tareas.flatMap((tarea) => [
       tarea,
       ...(tarea.instancias || []),
     ]);
-  
+
     let filtradas: any[] = [];
     if (estado === "Completas") {
       filtradas = todasLasTareas.filter((tarea) => tarea.completada);
@@ -91,7 +85,7 @@ const PerformanceDashboard = () => {
       );
     }
     setTareasFiltradas(filtradas);
-  };  
+  };
 
   const showModal = () => {
     setModalVisible(true);
@@ -123,26 +117,19 @@ const PerformanceDashboard = () => {
 
   return (
     <View style={styles.container}>
-      {/* Botón de consejo con área táctil amplia */}
       <TouchableOpacity style={styles.helpButtonWrapper} onPress={showModal}>
         <View style={styles.helpButton}>
           <Text style={styles.helpButtonText}>?</Text>
         </View>
       </TouchableOpacity>
-
-      {/* Modal para el consejo */}
+  
       <Modal
         visible={modalVisible}
         transparent={true}
         animationType="none"
         onRequestClose={hideModal}
       >
-        <Animated.View
-          style={[
-            styles.modalOverlay,
-            { opacity: modalOpacity },
-          ]}
-        >
+        <Animated.View style={[styles.modalOverlay, { opacity: modalOpacity }]}>
           <View style={styles.modalContent}>
             <Text style={styles.modalText}>{consejos}</Text>
             <TouchableOpacity style={styles.closeButton} onPress={hideModal}>
@@ -151,10 +138,9 @@ const PerformanceDashboard = () => {
           </View>
         </Animated.View>
       </Modal>
-
+  
       <Text style={styles.title}>Dashboard de Rendimiento</Text>
-
-      {/* Gráfico de barras */}
+  
       <BarChart
         data={data}
         width={Dimensions.get("window").width - 32}
@@ -174,8 +160,7 @@ const PerformanceDashboard = () => {
           borderRadius: 16,
         }}
       />
-
-      {/* Botones de filtro */}
+  
       <View style={styles.filterContainer}>
         {["Pendientes", "Completas", "Incompletas"].map((estado) => (
           <TouchableOpacity
@@ -197,26 +182,31 @@ const PerformanceDashboard = () => {
           </TouchableOpacity>
         ))}
       </View>
-
-      {/* Lista de tareas con scroll */}
-      <FlatList
-        data={tareasFiltradas}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.taskItem}>
-            <Text style={styles.taskText}>{item.nombre}</Text>
-            <Text style={styles.taskDate}>
-              Vence: {moment(item.fechaVencimiento).format("DD-MM-YYYY")}
+  
+      {/* Contenedor de la lista con tamaño ajustado */}
+      <View style={styles.listContainer}>
+        <FlatList
+          data={tareasFiltradas}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.taskItem}>
+              <Text style={styles.taskText}>{item.nombre}</Text>
+              <Text style={styles.taskDate}>
+                Vence: {moment(item.fechaVencimiento).format("DD-MM-YYYY")}
+              </Text>
+            </View>
+          )}
+          ListEmptyComponent={
+            <Text style={styles.emptyMessage}>
+              No hay tareas en esta categoría.
             </Text>
-          </View>
-        )}
-        ListEmptyComponent={
-          <Text style={styles.emptyMessage}>No hay tareas en esta categoría.</Text>
-        }
-        contentContainerStyle={{ paddingBottom: 75}}
-      />
+          }
+          contentContainerStyle={{ paddingBottom: 16 }}
+        />
+      </View>
     </View>
   );
+  
 };
 
 const styles = StyleSheet.create({
@@ -224,6 +214,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#ffffff",
     padding: 16,
+  },
+  listContainer: {
+    flex: 1, // Permite que el contenedor de la lista tome espacio restante
+    maxHeight: Dimensions.get("window").height * 0.4, // Limita la altura al 40% de la pantalla
+    marginBottom: 80, // Deja espacio para el menú inferior
+  },
+  taskItem: {
+    backgroundColor: "#f0f0f0",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 10,
   },
   helpButtonWrapper: {
     position: "absolute",
@@ -302,12 +303,6 @@ const styles = StyleSheet.create({
   selectedButtonText: {
     color: "#ffffff",
   },
-  taskItem: {
-    backgroundColor: "#f0f0f0",
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
   taskText: {
     fontSize: 16,
     fontWeight: "bold",
@@ -322,6 +317,10 @@ const styles = StyleSheet.create({
     color: "#999",
     fontSize: 16,
     marginTop: 20,
+  },
+  taskList: {
+    flexGrow: 0, // No ocupa más espacio del necesario
+    maxHeight: Dimensions.get("window").height * 0.5, // Máximo 50% de la pantalla
   },
 });
 

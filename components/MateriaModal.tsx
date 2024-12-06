@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { Materia } from "../interfaces/Materia";
@@ -41,7 +44,7 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
     editarMateria,
     materiasGlobales,
   } = useCalendar();
-  
+
   const [nombre, setNombre] = useState(materia?.event || "");
   const [color, setColor] = useState(materia?.color || "#f28b82");
   const [hasChanges, setHasChanges] = useState(false);
@@ -50,7 +53,7 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
     if (visible) {
       setNombre(materia?.event || "");
       setColor(materia?.color || "#f28b82");
-      setHasChanges(false); // Restablece los cambios al abrir el modal
+      setHasChanges(false);
     }
   }, [visible, materia]);
 
@@ -60,7 +63,6 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
       return;
     }
 
-    // Verificar si el nombre ya existe (excepto la misma materia en edición)
     const nombreEnUso = materiasGlobales.some(
       (mat) =>
         mat.event.toLowerCase() === nombre.trim().toLowerCase() &&
@@ -76,10 +78,8 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
     }
 
     if (materia) {
-      // Editar materia existente
       editarMateria(materia.id, { ...materia, event: nombre, color });
     } else {
-      // Agregar nueva materia
       agregarMateriaAlContexto({
         id: Math.random().toString(36).substr(2, 9),
         event: nombre,
@@ -93,7 +93,6 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
     onSave();
     onClose();
   };
-
 
   const handleClose = () => {
     if (hasChanges) {
@@ -123,49 +122,53 @@ export const MateriaModal: React.FC<MateriaModalProps> = ({
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.modalBackground}>
-        <View style={styles.modalContainer}>
-          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Icon name="close" size={24} color="#333" />
-          </TouchableOpacity>
-          <Text style={styles.modalTitle}>
-            {materia ? "Editar Materia" : "Nueva Materia"}
-          </Text>
-          <TextInput
-            value={nombre}
-            onChangeText={(text) => {
-              // Filtra caracteres no permitidos y aplica trim
-              const textoFiltrado = text.replace(/[^a-zA-Z0-9\sáéíóúÁÉÍÓÚüÜñÑ.,-]/g, "").trim();
-              setNombre(textoFiltrado);
-            }}
-            style={styles.input}
-            placeholder="Ej. Cálculo I"
-            placeholderTextColor="#888"
-          />
-          <Text style={styles.label}>Color:</Text>
-          <View style={styles.colorsContainer}>
-            {colorsAvailable.map((col) => (
-              <TouchableOpacity
-                key={col}
-                onPress={() => setColor(col)}
-                style={[
-                  styles.colorCircle,
-                  { backgroundColor: col },
-                  color === col && styles.colorSelected,
-                ]}
-              >
-                {color === col && <Icon name="check" size={16} color="white" />}
-              </TouchableOpacity>
-            ))}
-          </View>
-          <TouchableOpacity onPress={handleGuardar} style={styles.saveButton}>
-            <Text style={styles.saveButtonText}>Guardar</Text>
-          </TouchableOpacity>
+      <TouchableWithoutFeedback onPress={handleClose}>
+        <View style={styles.modalBackground}>
+          <KeyboardAvoidingView behavior="padding">
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>
+                  {materia ? "Editar Materia" : "Nueva Materia"}
+                </Text>
+                <TextInput
+                  value={nombre}
+                  onChangeText={(text) => {
+                    // Filtra caracteres no permitidos, pero permite espacios
+                    const textoFiltrado = text.replace(/[^a-zA-Z0-9\sáéíóúÁÉÍÓÚüÜñÑ.,-]/g, "");
+                    if (textoFiltrado.length <= 30)  setNombre(textoFiltrado);
+                  }}
+                  style={styles.input}
+                  placeholder="Ej. Cálculo I"
+                  placeholderTextColor="#888"
+                />
+                <Text style={styles.label}>Color:</Text>
+                <View style={styles.colorsContainer}>
+                  {colorsAvailable.map((col) => (
+                    <TouchableOpacity
+                      key={col}
+                      onPress={() => setColor(col)}
+                      style={[
+                        styles.colorCircle,
+                        { backgroundColor: col },
+                        color === col && styles.colorSelected,
+                      ]}
+                    >
+                      {color === col && <Icon name="check" size={16} color="white" />}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <TouchableOpacity onPress={handleGuardar} style={styles.saveButton}>
+                  <Text style={styles.saveButtonText}>Guardar</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };
+
 
 const styles = StyleSheet.create({
   modalBackground: {

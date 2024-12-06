@@ -27,7 +27,6 @@ interface TareaCardProps {
   customStyle?: object;
 }
 
-// Prefijo según prioridad
 const getPriorityPrefix = (prioridad: string) => {
   switch (prioridad) {
     case "Alta":
@@ -77,13 +76,12 @@ const TareaCard: React.FC<TareaCardProps> = ({
     outputRange: [0, 1],
   });
 
-  // Manejar el completado de tareas
   const handleComplete = () => {
     onComplete(tarea.id);
   };
 
-  // Confirmar eliminación de tareas o mostrar restricción para instancias
   const confirmDelete = () => {
+    if (isCompleted) return; // Bloquear si está completada
     if (tarea.id.includes("-")) {
       Alert.alert(
         "Eliminar no permitido",
@@ -103,8 +101,8 @@ const TareaCard: React.FC<TareaCardProps> = ({
     );
   };
 
-  // Confirmar edición de instancias
   const confirmEdit = () => {
+    if (isCompleted) return; // Bloquear si está completada
     if (tarea.id.includes("-")) {
       Alert.alert(
         "Edición no permitida",
@@ -120,6 +118,7 @@ const TareaCard: React.FC<TareaCardProps> = ({
     progress: Animated.AnimatedInterpolation<number>,
     dragX: Animated.AnimatedInterpolation<number>
   ) => {
+    if (isCompleted) return null; // Bloquear acciones de deslizamiento si está completada
     const scale = dragX.interpolate({
       inputRange: [-100, 0],
       outputRange: [1, 0],
@@ -136,11 +135,11 @@ const TareaCard: React.FC<TareaCardProps> = ({
   };
 
   return (
-    <Swipeable renderRightActions={renderRightActions}>
+    <Swipeable renderRightActions={renderRightActions} enabled={!isCompleted}>
       <StyledPressable
         className="p-4 mb-4 rounded-lg shadow-lg flex-row justify-between items-center"
         style={[styles.card, customStyle]}
-        onPress={confirmEdit} // Cambiar por confirmEdit
+        onPress={!isCompleted ? confirmEdit : undefined} // Bloquear edición si está completada
       >
         <View style={styles.itemLeft}>
           <Pressable
@@ -175,8 +174,15 @@ const TareaCard: React.FC<TareaCardProps> = ({
         </View>
 
         <View style={styles.iconsContainer}>
-          <StyledPressable onPress={onPlay} className="p-3">
-            <FontAwesome name="play-circle" size={30} color="black" />
+          <StyledPressable
+            onPress={!isCompleted ? onPlay : undefined} // Bloquear cronómetro si está completada
+            className="p-3"
+          >
+            <FontAwesome
+              name="play-circle"
+              size={30}
+              color={isCompleted ? "gray" : "black"}
+            />
           </StyledPressable>
         </View>
       </StyledPressable>
