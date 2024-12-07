@@ -6,6 +6,13 @@ import { TareasProvider } from "./context/TareasContext"; // Asegúrate de que l
 import Layout from "./app/_layout"; // Asegúrate de que la ruta sea correcta
 import "react-native-gesture-handler";
 import { MenuProvider } from "react-native-popup-menu";
+import moment from "moment"; // Importar moment
+
+
+// Configuración global
+moment.locale("es"); // Establecer idioma español
+moment.tz.setDefault("America/Guayaquil"); // Establecer zona horaria predeterminada
+
 
 export default function App() {
   return (

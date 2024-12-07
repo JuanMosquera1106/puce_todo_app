@@ -156,11 +156,11 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
         }
       );
       if (!response.ok) {
-        console.error("Error al insertar tarea en Supabase:", response.status);
+        console.log("Error al insertar tarea en Supabase:", response.status);
         console.log(tareaTransformada);
       }
     } catch (e) {
-      console.error("Error al enviar datos a Supabase", e);
+      console.log("Error al enviar datos a Supabase", e);
     }
   };
 
@@ -181,10 +181,10 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
         }
       );
       if (!response.ok) {
-        console.error("Error al actualizar tarea en Supabase:", response.status);
+        console.log("Error al actualizar tarea en Supabase:", response.status);
       }
     } catch (e) {
-      console.error("Error al enviar datos a Supabase para actualizar", e);
+      console.log("Error al enviar datos a Supabase para actualizar", e);
     }
   };
 

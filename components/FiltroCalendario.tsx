@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import CalendarStrip from "react-native-calendar-strip";
 import moment from "moment-timezone";
+import "moment/locale/es"; // Importa el idioma español para moment.js
+
+// Configura moment en español globalmente
+moment.locale("es");
 
 interface CalendarioProps {
   fechaSeleccionada: Date;

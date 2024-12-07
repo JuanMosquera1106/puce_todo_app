@@ -80,10 +80,10 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
           body: JSON.stringify(materiaTransformada),
         });
         if (!response.ok) {
-          console.error("Error al insertar materia en Supabase:", response.status);
+          console.log("Error al insertar materia en Supabase:", response.status);
         }
       } catch (error) {
-        console.error("Error al enviar datos a Supabase:", error);
+        console.log("Error al enviar datos a Supabase:", error);
       }
     };
 
@@ -112,12 +112,12 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
           body: JSON.stringify(materiaTransformada),
         });
         if (!response.ok) {
-          console.error("Error al editar materia en Supabase:", response.status);
+          console.log("Error al editar materia en Supabase:", response.status);
         } else {
           ToastAndroid.show("Materia editada correctamente", ToastAndroid.SHORT);
         }
       } catch (error) {
-        console.error("Error al enviar datos a Supabase:", error);
+        console.log("Error al enviar datos a Supabase:", error);
       }
     };
 
@@ -148,7 +148,7 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
                   },
                 });
                 if (!response.ok) {
-                  console.error(
+                  console.log(
                     "Error al eliminar materia en Supabase:",
                     response.status
                   );
@@ -159,7 +159,7 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({
                   );
                 }
               } catch (error) {
-                console.error("Error al eliminar datos de Supabase:", error);
+                console.log("Error al eliminar datos de Supabase:", error);
               }
             };
 

@@ -9,7 +9,7 @@ import {
   Animated,
 } from "react-native";
 import { useCalendar } from "../context/CalendarContext";
-import Calendario from "../components/FiltroSemanal";
+import Calendario from "../components/FiltroCalendario";
 import { Materia } from "../interfaces/Materia";
 import { Picker } from "@react-native-picker/picker";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -52,6 +52,7 @@ const timeBlocks = [
   "12:00 a. m.",
 ];
 
+// Formato de fecha
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
 const Header: React.FC<{
@@ -59,7 +60,7 @@ const Header: React.FC<{
   setFechaSeleccionada: (fecha: Date) => void;
 }> = ({ fechaSeleccionada, setFechaSeleccionada }) => (
   <View style={styles.header}>
-    <Text style={styles.headerTitle}>Gestiona tu tiempo aquí!</Text>
+    <Text style={styles.headerTitle}>Gestión del Tiempo</Text>
     <Calendario
       fechaSeleccionada={fechaSeleccionada}
       setFechaSeleccionada={setFechaSeleccionada}
@@ -78,46 +79,40 @@ const CalendarScreen: React.FC = () => {
   const formattedDate = formatDate(fechaSeleccionada);
   const materias: { [key: string]: Materia } = dayEvents[formattedDate] || {};
 
-  const handleInputChange = (time: string,materiaSeleccionada: Materia | null) => {
+  // Índice del bloque de "12:00 a. m."
+  const midnightIndex = timeBlocks.indexOf("12:00 a. m.");
+
+  const handleInputChange = (time: string, materiaSeleccionada: Materia | null) => {
+    if (!timeBlocks.includes(time)) {
+      console.error("Error: Intento de asignar materia a un bloque sin hora válida.");
+      return; // Evita la asignación si no hay una hora válida a la izquierda
+    }
+
     setDayEvents((prevDayEvents) => {
       const updatedMaterias = { ...prevDayEvents[formattedDate] };
       const currentIndex = timeBlocks.indexOf(time);
-      const maxBlocks = timeBlocks.length - currentIndex;
+
+      // Calcula el máximo de bloques sin superar medianoche ni 2 horas
+      const maxBlocks = midnightIndex - currentIndex + 1; // Hasta la medianoche inclusive
+      const allowedDuration = Math.min(draggingHeight, maxBlocks, 4);
 
       if (materiaSeleccionada) {
-        // Ajustar la duración al rango permitido
-        const adjustedDuration = Math.min(draggingHeight, maxBlocks);
-    
-
-        // Evitar la creación de bloques fuera de rango
-      if (currentIndex + adjustedDuration > timeBlocks.length) {
-        return prevDayEvents; // No hacer cambios si excede el límite
-      }
-
         updatedMaterias[time] = {
-            ...materiaSeleccionada,
-            time,
-            duration: adjustedDuration,
+          ...materiaSeleccionada,
+          time,
+          duration: allowedDuration,
         };
 
-        // Eliminar bloques superpuestos si la duración cambia
-        for (let i = 1; i < adjustedDuration; i++) {
-            const nextBlock = timeBlocks[currentIndex + i];
-            if (nextBlock) delete updatedMaterias[nextBlock];
+        // Eliminar bloques que excedan el rango permitido
+        for (let i = 1; i < allowedDuration; i++) {
+          const nextBlock = timeBlocks[currentIndex + i];
+          if (nextBlock) delete updatedMaterias[nextBlock];
         }
-    } else {
+      } else {
         delete updatedMaterias[time];
-    }
-
-    // Limpiar bloques vacíos y fuera del rango
-    Object.keys(updatedMaterias).forEach((key) => {
-      const index = timeBlocks.indexOf(key);
-      if (index === -1 || !updatedMaterias[key]) {
-        delete updatedMaterias[key];
       }
-    });
 
-    return { ...prevDayEvents, [formattedDate]: updatedMaterias };
+      return { ...prevDayEvents, [formattedDate]: updatedMaterias };
     });
   };
 
@@ -137,42 +132,29 @@ const CalendarScreen: React.FC = () => {
       if (!selectedBlock) return;
       const blockHeight = 60;
       const currentIndex = timeBlocks.indexOf(selectedBlock);
-      const draggedBlocks = Math.round(
-        (gestureState.moveY - dragStartY) / blockHeight
-      );
+      const draggedBlocks = Math.round((gestureState.moveY - dragStartY) / blockHeight);
 
-      // Limitar el nuevo bloque al rango permitido
-      let newHeight = Math.max(
-        1,
-        (materias[selectedBlock]?.duration || 1) + draggedBlocks
-      );
-
-    // Restringir la expansión más allá del último bloque permitido
-    const maxHeight = timeBlocks.length - currentIndex; // Bloques restantes desde el actual
-    if (currentIndex + newHeight > timeBlocks.length) {
-        newHeight = maxHeight; // Restringir al máximo permitido
-    }
+      // Limita a 2 horas (4 bloques) y que no pase de medianoche
+      const maxBlocks = midnightIndex - currentIndex + 1;
+      const newHeight = Math.max(1, Math.min((materias[selectedBlock]?.duration || 1) + draggedBlocks, maxBlocks, 4));
 
       setDraggingHeight(newHeight);
     },
     onPanResponderRelease: () => {
       if (selectedBlock) {
         const currentIndex = timeBlocks.indexOf(selectedBlock);
-        const adjustedHeight = Math.min(
-          draggingHeight,
-          timeBlocks.length - currentIndex
-        );
-        
-        // Sobreescribir bloques ocupados al expandir
-    for (let i = 1; i < adjustedHeight; i++) {
-      const nextBlock = timeBlocks[currentIndex + i];
-      if (nextBlock && materias[nextBlock]) {
-        handleInputChange(nextBlock, null); // Eliminar bloque superpuesto
-      }
-    }
+        const maxBlocks = midnightIndex - currentIndex + 1;
+        const adjustedHeight = Math.min(draggingHeight, maxBlocks, 4);
 
-    handleInputChange(selectedBlock, materias[selectedBlock]);
+        // Limpia cualquier bloque sobrante
+        for (let i = 1; i < adjustedHeight; i++) {
+          const nextBlock = timeBlocks[currentIndex + i];
+          if (nextBlock && materias[nextBlock]) {
+            handleInputChange(nextBlock, null);
+          }
+        }
 
+        handleInputChange(selectedBlock, materias[selectedBlock]);
       }
       setDragging(false);
       setSelectedBlock(null);
@@ -185,7 +167,12 @@ const CalendarScreen: React.FC = () => {
         fechaSeleccionada={fechaSeleccionada}
         setFechaSeleccionada={setFechaSeleccionada}
       />
-      <ScrollView>
+      <ScrollView
+        contentContainerStyle={{
+          height: midnightIndex * 60, // Ajusta la altura total al último bloque visible
+          paddingBottom: 80,
+        }}
+      >
         <View style={styles.scheduleContainer}>
           <View style={styles.timeColumn}>
             {timeBlocks.map((time, index) => (
@@ -199,52 +186,28 @@ const CalendarScreen: React.FC = () => {
               const materia = materias[time];
               const isSelected = selectedBlock === time;
 
-              // Verificar si este bloque está ocupado por un evento más largo
-              const occupyingEvent = Object.values(materias).find(
-                (mat) =>
-                  timeBlocks.indexOf(mat.time) <= index &&
-                  index < timeBlocks.indexOf(mat.time) + mat.duration
-              );
-
-              // Validar que los bloques estén dentro del rango permitido
-              if (materia && index + materia.duration > timeBlocks.length) {
-                return null; // No renderizar bloques fuera del rango
-              }
-
               return (
                 <TouchableOpacity
                   key={index}
                   style={[
                     styles.eventSlot,
-                    materia
-                      ? {
-                        height: Math.min(
-                          materia.duration * 60,
-                          (timeBlocks.length - index) * 60
-                      ), // Restringe la altura
-                          backgroundColor: materia.color,
-                          borderRadius: 12,
-                        }
-                      : { height: 60 },
+                    materia && {
+                      height: materia.duration * 60,
+                      backgroundColor: materia.color,
+                      borderRadius: 12,
+                    },
                   ]}
                   onPress={() => handleBlockClick(time)}
                 >
                   {isSelected ? (
-                    <Animated.View
-                      style={[
-                        { height: draggingHeight * 60 },
-                        styles.dragContainer,
-                      ]}
-                    >
+                    <Animated.View style={[{ height: draggingHeight * 60 }, styles.dragContainer]}>
                       <Picker
                         selectedValue={materia ? materia.event : "Seleccionar"}
                         onValueChange={(itemValue) => {
                           if (itemValue === "Eliminar") {
                             handleInputChange(time, null);
                           } else if (itemValue !== "Seleccionar") {
-                            const materiaSeleccionada = materiasGlobales.find(
-                              (mat) => mat.event === itemValue
-                            );
+                            const materiaSeleccionada = materiasGlobales.find((mat) => mat.event === itemValue);
                             if (materiaSeleccionada) {
                               handleInputChange(time, materiaSeleccionada);
                             }
@@ -253,37 +216,18 @@ const CalendarScreen: React.FC = () => {
                         style={styles.picker}
                         dropdownIconColor="#ffff"
                       >
-                        <Picker.Item
-                          label="Seleccionar materia"
-                          value="Seleccionar"
-                        />
+                        <Picker.Item label="Seleccionar materia" value="Seleccionar" />
                         {materiasGlobales.map((mat, idx) => (
-                          <Picker.Item
-                            key={idx}
-                            label={mat.event}
-                            value={mat.event}
-                          />
+                          <Picker.Item key={idx} label={mat.event} value={mat.event} />
                         ))}
-                        <Picker.Item
-                          label="Eliminar materia"
-                          value="Eliminar"
-                        />
+                        <Picker.Item label="Eliminar materia" value="Eliminar" />
                       </Picker>
-                      <View
-                        {...panResponder.panHandlers}
-                        style={styles.dragHandle}
-                      >
-                        <MaterialIcons
-                          name="drag-handle"
-                          size={32}
-                          color="#666"
-                        />
+                      <View {...panResponder.panHandlers} style={styles.dragHandle}>
+                        <MaterialIcons name="drag-handle" size={32} color="#666" />
                       </View>
                     </Animated.View>
                   ) : (
-                    materia && (
-                      <Text style={styles.eventText}>{materia.event}</Text>
-                    )
+                    materia && <Text style={styles.eventText}>{materia.event}</Text>
                   )}
                 </TouchableOpacity>
               );
@@ -296,7 +240,7 @@ const CalendarScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5", paddingBottom: 20 },
+  container: { flex: 1, backgroundColor: "#f5f5f5", paddingBottom: 120 },
   header: { paddingTop: 30, paddingBottom: 10, backgroundColor: "#ffffff" },
   headerTitle: { fontSize: 24, fontWeight: "bold", textAlign: "center" },
   scheduleContainer: { flexDirection: "row", flex: 1, marginTop: 10 },
@@ -308,6 +252,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#ddd",
     position: "relative",
+    height: 60, // Altura mínima para slots vacíos
   },
   eventText: { fontSize: 18, color: "#000", marginLeft: 10, marginTop: 15 },
   dragContainer: { backgroundColor: "#e3f2fd", borderRadius: 8 },
