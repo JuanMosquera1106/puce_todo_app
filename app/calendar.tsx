@@ -12,6 +12,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   useAnimatedGestureHandler,
+  withSpring,
 } from "react-native-reanimated";
 import { useCalendar } from "../context/CalendarContext";
 import Calendario from "../components/FiltroCalendario";
@@ -107,15 +108,15 @@ const CalendarScreen: React.FC = () => {
   const renderBlocks = () => {
     const dateKey = fechaSeleccionada.toISOString().split("T")[0];
     const dayEvents = weeklyEvents[dateKey] || {};
-  
+
     return timeBlocks.map((time, index) => {
       const materia = dayEvents[time];
-      const height = useSharedValue(60); // Altura inicial de los bloques
-  
+      const height = useSharedValue(60);
+
       const animatedHeight = useAnimatedStyle(() => ({
         height: height.value,
       }));
-  
+
       const gestureHandler = useAnimatedGestureHandler({
         onStart: (_, ctx: any) => {
           if (materia) {
@@ -125,32 +126,25 @@ const CalendarScreen: React.FC = () => {
         onActive: (event, ctx: any) => {
           if (materia) {
             const newHeight = ctx.startHeight + event.translationY;
-            const maxHeight = (timeBlocks.length - index) * 60; // Máximo permitido hasta las 7:00 PM
+            const maxHeight = (timeBlocks.length - index) * 60;
             height.value = Math.min(Math.max(60, newHeight), maxHeight);
           }
         },
         onEnd: () => {
           if (materia) {
-            height.value = Math.round(height.value / 60) * 60; // Redondear al bloque más cercano
+            height.value = Math.round(height.value / 60) * 60;
           }
         },
       });
-  
+
       return (
         <TouchableOpacity
           key={index}
           onPress={() => {
-            if (materia) {
-              setCurrentBlock(time);
-              setModalVisible(true);
-            }
+            setCurrentBlock(time);
+            setModalVisible(true);
           }}
-          style={[
-            styles.eventSlot,
-            materia
-              ? { backgroundColor: materia.color, borderRadius: 12 }
-              : { backgroundColor: "#E8EAF6" },
-          ]}
+          style={[styles.eventSlot, materia && { backgroundColor: materia.color }]}
         >
           {materia ? (
             <PanGestureHandler onGestureEvent={gestureHandler}>
@@ -165,7 +159,6 @@ const CalendarScreen: React.FC = () => {
       );
     });
   };
-  
 
   return (
     <View style={styles.container}>
