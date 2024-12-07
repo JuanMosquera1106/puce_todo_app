@@ -3,7 +3,6 @@ import { Tarea } from "../interfaces/Tarea";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import moment from "moment";
 
-// --- Generación de fechas repetidas ---
 const generarFechasRepetidas = (tarea: Tarea): Tarea[] => {
   if (!tarea.repetir || tarea.repetir === "No repetir") return [];
 
@@ -11,10 +10,8 @@ const generarFechasRepetidas = (tarea: Tarea): Tarea[] => {
   let fechaActual = moment(tarea.fechaVencimiento).subtract(1, "day");
 
   while (fechaActual.isSameOrAfter(moment().startOf("day"))) {
-    if (
-      (tarea.repetir === "Semanal" || tarea.repetir === "Mensual") &&
-      fechaActual.isSame(moment(tarea.fechaVencimiento).subtract(1, "day"), "day")
-    ) {
+    // Omitir la fecha de vencimiento de la tarea principal
+    if (fechaActual.isSame(moment(tarea.fechaVencimiento), "day")) {
       fechaActual.subtract(1, tarea.repetir === "Semanal" ? "week" : "month");
       continue;
     }
@@ -119,13 +116,20 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
     guardarTareasEnStorage(nuevasTareas);
   };
 
-  // --- Eliminar una tarea ---
+   // --- Eliminar una tarea y sus instancias ---
   const eliminarTarea = (id: string): void => {
-    const nuevasTareas = tareas.filter((tarea) => tarea.id !== id);
+    const nuevasTareas = tareas.filter((tarea) => {
+      // Eliminar la tarea principal y todas sus instancias
+      if (tarea.id === id || tarea.id.startsWith(`${id}-`)) {
+        return false;
+      }
+      return true;
+  });
 
-    setTareas(nuevasTareas);
-    guardarTareasEnStorage(nuevasTareas);
-  };
+  setTareas(nuevasTareas);
+  guardarTareasEnStorage(nuevasTareas);
+};
+
 
   // --- Función para transformar la tarea al formato requerido para Supabase ---
   const transformarTarea = (tarea: Tarea) => {
@@ -206,9 +210,9 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
 
   // --- Actualizar tarea ---
   const actualizarTarea = async (tareaActualizada: Tarea): Promise<void> => {
-    // Filtra las tareas, eliminando instancias relacionadas con la tarea principal actualizada
-    const tareasSinInstanciasPrevias = tareas.filter(
-      (tarea) => !tarea.id.startsWith(`${tareaActualizada.id}-`)
+    // Filtra las tareas, eliminando la tarea principal y todas sus instancias relacionadas
+    const tareasFiltradas = tareas.filter(
+      (tarea) => tarea.id !== tareaActualizada.id && !tarea.id.startsWith(`${tareaActualizada.id}-`)
     );
   
     // Generar nuevas instancias si cambian las propiedades clave
@@ -224,11 +228,11 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
           })
         : [];
   
-    // Actualizar la lista de tareas
+    // Crear la lista actualizada de tareas
     const nuevasTareas = [
-      ...tareasSinInstanciasPrevias.filter((t) => t.id !== tareaActualizada.id), // Elimina la tarea principal vieja
-      { ...tareaActualizada, instancias: nuevasInstancias }, // Agrega la tarea principal actualizada
-      ...nuevasInstancias, // Agrega las nuevas instancias
+      ...tareasFiltradas, // Mantener las tareas existentes sin las eliminadas
+      { ...tareaActualizada, instancias: nuevasInstancias }, // Añadir la tarea principal actualizada
+      ...nuevasInstancias, // Añadir las nuevas instancias
     ];
   
     // Actualizar el estado y almacenamiento
@@ -241,7 +245,7 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
     for (const instancia of nuevasInstancias) {
       await actualizarTareaEnSupabase(instancia);
     }
-  };  
+  }; 
 
   // --- Aplicar filtro por materia ---
   const obtenerTareasFiltradas = useCallback(() => {

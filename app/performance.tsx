@@ -13,6 +13,7 @@ import {
 import { BarChart } from "react-native-chart-kit";
 import { useTareas } from "../context/TareasContext";
 import moment from "moment";
+import { Tarea } from "../interfaces/Tarea";
 
 const PerformanceDashboard = () => {
   const { tareas } = useTareas();
@@ -63,12 +64,17 @@ const PerformanceDashboard = () => {
   }, [estadoSeleccionado, tareas]);
 
   const filtrarTareas = (estado: string) => {
-    const todasLasTareas = tareas.flatMap((tarea) => [
-      tarea,
-      ...(tarea.instancias || []),
-    ]);
-
-    let filtradas: any[] = [];
+    // Extraer tareas principales e instancias y eliminar duplicados
+    const todasLasTareas = [
+      ...new Map(
+        tareas
+          .flatMap((tarea) => [tarea, ...(tarea.instancias || [])]) // Combinar tareas principales e instancias
+          .map((t) => [t.id, t]) // Usar el ID como clave única
+      ).values(), // Tomar sólo valores únicos
+    ];
+  
+    // Filtrar según el estado seleccionado
+    let filtradas: Tarea[] = [];
     if (estado === "Completas") {
       filtradas = todasLasTareas.filter((tarea) => tarea.completada);
     } else if (estado === "Incompletas") {
@@ -84,8 +90,10 @@ const PerformanceDashboard = () => {
           tarea.fechaVencimiento >= moment().format("YYYY-MM-DD")
       );
     }
+  
+    // Actualizar las tareas filtradas
     setTareasFiltradas(filtradas);
-  };
+  };  
 
   const showModal = () => {
     setModalVisible(true);

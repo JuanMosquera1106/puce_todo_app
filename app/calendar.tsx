@@ -45,6 +45,15 @@ const timeBlocks = [
   "6:00 p. m.",
   "6:30 p. m.",
   "7:00 p. m.",
+  "7:30 p. m.",
+  "8:30 p. m.",
+  "9:00 p. m.",
+  "9:30 p. m.",
+  "10:00 p. m.",
+  "10:30 p. m.",
+  "11:00 p. m.",
+  "11:30 p. m.",
+  "12:00 a. m.",
 ];
 
 const CalendarScreen: React.FC = () => {
@@ -226,6 +235,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F5F5F5",
     borderRadius: 12,
+    marginBottom: 100,
   },
   header: {
     paddingVertical: 20,
