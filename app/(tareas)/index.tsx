@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   },
   iconoOpciones: {
     position: "absolute",
-    top: 30,
+    top: 25,
     right: 10,
     padding: 5,
   },
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   },
   iconoHamburguesa: {
     position: "absolute",
-    top: 30,
+    top: 25,
     left: 10,
     padding: 5,
   },
