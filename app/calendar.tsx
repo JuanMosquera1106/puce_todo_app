@@ -1,24 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
+  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Modal,
-  StyleSheet,
+  PanResponder,
+  Animated,
 } from "react-native";
-import { PanGestureHandler } from "react-native-gesture-handler";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  useAnimatedGestureHandler,
-  withSpring,
-} from "react-native-reanimated";
 import { useCalendar } from "../context/CalendarContext";
 import Calendario from "../components/FiltroCalendario";
 import { Materia } from "../interfaces/Materia";
+import { Picker } from "@react-native-picker/picker";
+import { MaterialIcons } from "@expo/vector-icons";
 
-// Extender el rango de tiempo hasta las 7:00 PM
 const timeBlocks = [
   "7:00 a. m.",
   "7:30 a. m.",
@@ -46,6 +41,7 @@ const timeBlocks = [
   "6:30 p. m.",
   "7:00 p. m.",
   "7:30 p. m.",
+  "8:00 p. m.",
   "8:30 p. m.",
   "9:00 p. m.",
   "9:30 p. m.",
@@ -56,174 +52,187 @@ const timeBlocks = [
   "12:00 a. m.",
 ];
 
+// Formato de fecha
+const formatDate = (date: Date) => date.toISOString().split("T")[0];
+
+const Header: React.FC<{
+  fechaSeleccionada: Date;
+  setFechaSeleccionada: (fecha: Date) => void;
+}> = ({ fechaSeleccionada, setFechaSeleccionada }) => (
+  <View style={styles.header}>
+    <Text style={styles.headerTitle}>Horario Semanal</Text>
+    <Calendario
+      fechaSeleccionada={fechaSeleccionada}
+      setFechaSeleccionada={setFechaSeleccionada}
+    />
+  </View>
+);
+
 const CalendarScreen: React.FC = () => {
-  const { materiasGlobales } = useCalendar() as unknown as {
-    materiasGlobales: Materia[];
-  };
+  const { dayEvents, setDayEvents, materiasGlobales } = useCalendar();
   const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date());
-  const [modalVisible, setModalVisible] = useState(false);
-  const [currentBlock, setCurrentBlock] = useState<string | null>(null);
-  const [weeklyEvents, setWeeklyEvents] = useState<{
-    [date: string]: { [block: string]: Materia };
-  }>({});
+  const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
+  const [draggingHeight, setDraggingHeight] = useState<number>(1);
+  const [dragStartY, setDragStartY] = useState<number>(0);
+  const [dragging, setDragging] = useState<boolean>(false);
 
-  const currentTime = useSharedValue<number>(0);
+  const formattedDate = formatDate(fechaSeleccionada);
+  const materias: { [key: string]: Materia } = dayEvents[formattedDate] || {};
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const hour = now.getHours();
-      const minutes = now.getMinutes();
-      const totalMinutes = hour * 60 + minutes;
-      const position = (totalMinutes - 420) * (60 / 30);
-      currentTime.value = Math.max(0, position);
-    }, 1000);
+  // Índice del bloque de "12:00 a. m."
+  const midnightIndex = timeBlocks.indexOf("12:00 a. m.");
 
-    return () => clearInterval(interval);
-  }, []);
-
-  const currentTimeStyle = useAnimatedStyle(() => ({
-    position: "absolute",
-    top: currentTime.value,
-    height: 2,
-    backgroundColor: "blue",
-    width: "100%",
-  }));
-
-  const handleMateriaSelection = (materia: Materia) => {
-    if (currentBlock) {
-      setWeeklyEvents((prev) => {
-        const dateKey = fechaSeleccionada.toISOString().split("T")[0];
-        const dayEvents = prev[dateKey] || {};
-        dayEvents[currentBlock] = materia;
-        return { ...prev, [dateKey]: dayEvents };
-      });
+  const handleInputChange = (time: string, materiaSeleccionada: Materia | null) => {
+    if (!timeBlocks.includes(time)) {
+      console.error("Error: Intento de asignar materia a un bloque sin hora válida.");
+      return; // Evita la asignación si no hay una hora válida a la izquierda
     }
-    setModalVisible(false);
-  };
 
-  const handleMateriaDeletion = () => {
-    if (currentBlock) {
-      setWeeklyEvents((prev) => {
-        const dateKey = fechaSeleccionada.toISOString().split("T")[0];
-        const dayEvents = { ...(prev[dateKey] || {}) };
-        delete dayEvents[currentBlock];
-        return { ...prev, [dateKey]: dayEvents };
-      });
-    }
-    setModalVisible(false);
-  };
+    setDayEvents((prevDayEvents) => {
+      const updatedMaterias = { ...prevDayEvents[formattedDate] };
+      const currentIndex = timeBlocks.indexOf(time);
 
-  const renderBlocks = () => {
-    const dateKey = fechaSeleccionada.toISOString().split("T")[0];
-    const dayEvents = weeklyEvents[dateKey] || {};
+      // Calcula el máximo de bloques sin superar medianoche ni 2 horas
+      const maxBlocks = midnightIndex - currentIndex + 1; // Hasta la medianoche inclusive
+      const allowedDuration = Math.min(draggingHeight, maxBlocks, 4);
 
-    return timeBlocks.map((time, index) => {
-      const materia = dayEvents[time];
-      const height = useSharedValue(60);
+      if (materiaSeleccionada) {
+        updatedMaterias[time] = {
+          ...materiaSeleccionada,
+          time,
+          duration: allowedDuration,
+        };
 
-      const animatedHeight = useAnimatedStyle(() => ({
-        height: height.value,
-      }));
+        // Eliminar bloques que excedan el rango permitido
+        for (let i = 1; i < allowedDuration; i++) {
+          const nextBlock = timeBlocks[currentIndex + i];
+          if (nextBlock) delete updatedMaterias[nextBlock];
+        }
+      } else {
+        delete updatedMaterias[time];
+      }
 
-      const gestureHandler = useAnimatedGestureHandler({
-        onStart: (_, ctx: any) => {
-          if (materia) {
-            ctx.startHeight = height.value;
-          }
-        },
-        onActive: (event, ctx: any) => {
-          if (materia) {
-            const newHeight = ctx.startHeight + event.translationY;
-            const maxHeight = (timeBlocks.length - index) * 60;
-            height.value = Math.min(Math.max(60, newHeight), maxHeight);
-          }
-        },
-        onEnd: () => {
-          if (materia) {
-            height.value = Math.round(height.value / 60) * 60;
-          }
-        },
-      });
-
-      return (
-        <TouchableOpacity
-          key={index}
-          onPress={() => {
-            setCurrentBlock(time);
-            setModalVisible(true);
-          }}
-          style={[styles.eventSlot, materia && { backgroundColor: materia.color }]}
-        >
-          {materia ? (
-            <PanGestureHandler onGestureEvent={gestureHandler}>
-              <Animated.View style={[animatedHeight, styles.centerContent]}>
-                <Text style={styles.eventText}>{String(materia.event)}</Text>
-              </Animated.View>
-            </PanGestureHandler>
-          ) : (
-            <Text style={styles.emptyBlockText}>+</Text>
-          )}
-        </TouchableOpacity>
-      );
+      return { ...prevDayEvents, [formattedDate]: updatedMaterias };
     });
   };
 
+  const handleBlockClick = (time: string) => {
+    setSelectedBlock(time);
+    setDraggingHeight(materias[time]?.duration || 1);
+    setDragging(false);
+  };
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onPanResponderGrant: (_, gestureState) => {
+      setDragging(true);
+      setDragStartY(gestureState.y0);
+    },
+    onPanResponderMove: (_, gestureState) => {
+      if (!selectedBlock) return;
+      const blockHeight = 60;
+      const currentIndex = timeBlocks.indexOf(selectedBlock);
+      const draggedBlocks = Math.round((gestureState.moveY - dragStartY) / blockHeight);
+
+      // Limita a 2 horas (4 bloques) y que no pase de medianoche
+      const maxBlocks = midnightIndex - currentIndex + 1;
+      const newHeight = Math.max(1, Math.min((materias[selectedBlock]?.duration || 1) + draggedBlocks, maxBlocks, 4));
+
+      setDraggingHeight(newHeight);
+    },
+    onPanResponderRelease: () => {
+      if (selectedBlock) {
+        const currentIndex = timeBlocks.indexOf(selectedBlock);
+        const maxBlocks = midnightIndex - currentIndex + 1;
+        const adjustedHeight = Math.min(draggingHeight, maxBlocks, 4);
+
+        // Limpia cualquier bloque sobrante
+        for (let i = 1; i < adjustedHeight; i++) {
+          const nextBlock = timeBlocks[currentIndex + i];
+          if (nextBlock && materias[nextBlock]) {
+            handleInputChange(nextBlock, null);
+          }
+        }
+
+        handleInputChange(selectedBlock, materias[selectedBlock]);
+      }
+      setDragging(false);
+      setSelectedBlock(null);
+    },
+  });
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Modal
-          visible={modalVisible}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Seleccionar Materia</Text>
-              {materiasGlobales.map((materia, index) => (
+      <Header
+        fechaSeleccionada={fechaSeleccionada}
+        setFechaSeleccionada={setFechaSeleccionada}
+      />
+      <ScrollView
+        contentContainerStyle={{
+          height: midnightIndex * 60, // Ajusta la altura total al último bloque visible
+          paddingBottom: 80,
+        }}
+      >
+        <View style={styles.scheduleContainer}>
+          <View style={styles.timeColumn}>
+            {timeBlocks.map((time, index) => (
+              <View key={index} style={styles.timeRow}>
+                <Text style={styles.timeText}>{time}</Text>
+              </View>
+            ))}
+          </View>
+          <View style={styles.eventsColumn}>
+            {timeBlocks.map((time, index) => {
+              const materia = materias[time];
+              const isSelected = selectedBlock === time;
+
+              return (
                 <TouchableOpacity
                   key={index}
-                  style={styles.materiaButton}
-                  onPress={() => handleMateriaSelection(materia)}
+                  style={[
+                    styles.eventSlot,
+                    materia && {
+                      height: materia.duration * 60,
+                      backgroundColor: materia.color,
+                      borderRadius: 12,
+                    },
+                  ]}
+                  onPress={() => handleBlockClick(time)}
                 >
-                  <Text style={styles.materiaText}>{materia.event}</Text>
+                  {isSelected ? (
+                    <Animated.View style={[{ height: draggingHeight * 60 }, styles.dragContainer]}>
+                      <Picker
+                        selectedValue={materia ? materia.event : "Seleccionar"}
+                        onValueChange={(itemValue) => {
+                          if (itemValue === "Eliminar") {
+                            handleInputChange(time, null);
+                          } else if (itemValue !== "Seleccionar") {
+                            const materiaSeleccionada = materiasGlobales.find((mat) => mat.event === itemValue);
+                            if (materiaSeleccionada) {
+                              handleInputChange(time, materiaSeleccionada);
+                            }
+                          }
+                        }}
+                        style={styles.picker}
+                        dropdownIconColor="#ffff"
+                      >
+                        <Picker.Item label="Seleccionar materia" value="Seleccionar" />
+                        {materiasGlobales.map((mat, idx) => (
+                          <Picker.Item key={idx} label={mat.event} value={mat.event} />
+                        ))}
+                        <Picker.Item label="Eliminar materia" value="Eliminar" />
+                      </Picker>
+                      <View {...panResponder.panHandlers} style={styles.dragHandle}>
+                        <MaterialIcons name="drag-handle" size={32} color="#666" />
+                      </View>
+                    </Animated.View>
+                  ) : (
+                    materia && <Text style={styles.eventText}>{materia.event}</Text>
+                  )}
                 </TouchableOpacity>
-              ))}
-              {currentBlock && weeklyEvents[fechaSeleccionada.toISOString().split("T")[0]]?.[currentBlock] && (
-                <TouchableOpacity
-                  style={[styles.materiaButton, styles.cancelButton]}
-                  onPress={handleMateriaDeletion}
-                >
-                  <Text style={styles.materiaText}>Eliminar</Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                style={[styles.materiaButton, styles.cancelButton]}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.materiaText}>Cancelar</Text>
-              </TouchableOpacity>
-            </View>
+              );
+            })}
           </View>
-        </Modal>
-        <Text style={styles.headerTitle}>Horario Semanal</Text>
-        <Calendario
-          fechaSeleccionada={fechaSeleccionada}
-          setFechaSeleccionada={setFechaSeleccionada}
-        />
-      </View>
-      <ScrollView contentContainerStyle={styles.scheduleContainer}>
-        <View style={styles.timeColumn}>
-          {timeBlocks.map((time, index) => (
-            <View key={index} style={styles.timeRow}>
-              <Text style={styles.timeText}>{time}</Text>
-            </View>
-          ))}
-        </View>
-        <View style={{ position: "relative", flex: 1 }}>
-          <Animated.View style={currentTimeStyle} />
-          {renderBlocks()}
         </View>
       </ScrollView>
     </View>
@@ -231,113 +240,24 @@ const CalendarScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    marginBottom: 100,
-  },
-  header: {
-    paddingVertical: 20,
-    paddingHorizontal: 10,
-    backgroundColor: "#FFFFFF",
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  scheduleContainer: {
-    flexDirection: "row",
-    paddingHorizontal: 10,
-  },
-  timeColumn: {
-    width: 80,
-  },
-  timeRow: {
-    height: 60,
-    justifyContent: "center",
-  },
-  timeText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  eventsColumn: {
-    flex: 1,
-    marginLeft: 10,
-  },
+  container: { flex: 1, backgroundColor: "#f5f5f5", paddingBottom: 120 },
+  header: { paddingTop: 30, paddingBottom: 10, backgroundColor: "#ffffff" },
+  headerTitle: { fontSize: 24, fontWeight: "bold", textAlign: "center" },
+  scheduleContainer: { flexDirection: "row", flex: 1, marginTop: 10 },
+  timeColumn: { width: 100, paddingLeft: 20 },
+  timeRow: { height: 60, justifyContent: "center" },
+  timeText: { fontSize: 16, color: "#333" },
+  eventsColumn: { flex: 1, marginLeft: 10 },
   eventSlot: {
-    height: 60,
-    backgroundColor: "#E8EAF6",
     borderBottomWidth: 1,
-    borderBottomColor: "#DDD",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 12,
+    borderBottomColor: "#ddd",
+    position: "relative",
+    height: 60, // Altura mínima para slots vacíos
   },
-  eventText: {
-    fontSize: 16,
-    color: "#000",
-  },
-  emptyBlockText: {
-    fontSize: 24,
-    color: "#AAA",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    width: 300,
-    backgroundColor: "#FFF",
-    padding: 20,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalMessage: {
-    fontSize: 16,
-    color: "#333",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  modalButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  deleteButton: {
-    backgroundColor: "#FFCDD2",
-    marginLeft: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  materiaButton: {
-    padding: 12,
-    backgroundColor: "#E8EAF6",
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  materiaText: {
-    fontSize: 16,
-    color: "#333",
-    textAlign: "center",
-  },
-  cancelButton: {
-    backgroundColor: "#FFCDD2",
-  },
-  centerContent: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  eventText: { fontSize: 18, color: "#000", marginLeft: 10, marginTop: 15 },
+  dragContainer: { backgroundColor: "#e3f2fd", borderRadius: 8 },
+  picker: { backgroundColor: "#fff", padding: 10 },
+  dragHandle: { position: "absolute", bottom: 5, right: 10 },
 });
 
 export default CalendarScreen;
