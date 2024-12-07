@@ -12,7 +12,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   useAnimatedGestureHandler,
-  withSpring,
 } from "react-native-reanimated";
 import { useCalendar } from "../context/CalendarContext";
 import Calendario from "../components/FiltroCalendario";
@@ -48,24 +47,25 @@ const timeBlocks = [
 ];
 
 const CalendarScreen: React.FC = () => {
-  const { dayEvents, setDayEvents, materiasGlobales } = useCalendar() as unknown as {
-    dayEvents: { [key: string]: Materia };
-    setDayEvents: React.Dispatch<React.SetStateAction<{ [key: string]: Materia }>>;
+  const { materiasGlobales } = useCalendar() as unknown as {
     materiasGlobales: Materia[];
   };
   const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date());
   const [modalVisible, setModalVisible] = useState(false);
   const [currentBlock, setCurrentBlock] = useState<string | null>(null);
+  const [weeklyEvents, setWeeklyEvents] = useState<{
+    [date: string]: { [block: string]: Materia };
+  }>({});
+
   const currentTime = useSharedValue<number>(0);
 
-  // Línea azul que se actualiza cada segundo
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
       const hour = now.getHours();
       const minutes = now.getMinutes();
       const totalMinutes = hour * 60 + minutes;
-      const position = (totalMinutes - 420) * (60 / 30); // 7:00 AM = 420 minutos
+      const position = (totalMinutes - 420) * (60 / 30);
       currentTime.value = Math.max(0, position);
     }, 1000);
 
@@ -82,66 +82,90 @@ const CalendarScreen: React.FC = () => {
 
   const handleMateriaSelection = (materia: Materia) => {
     if (currentBlock) {
-      setDayEvents((prevDayEvents) => {
-        const updatedMaterias = { ...prevDayEvents };
-        updatedMaterias[currentBlock] = materia;
-        return updatedMaterias;
+      setWeeklyEvents((prev) => {
+        const dateKey = fechaSeleccionada.toISOString().split("T")[0];
+        const dayEvents = prev[dateKey] || {};
+        dayEvents[currentBlock] = materia;
+        return { ...prev, [dateKey]: dayEvents };
       });
     }
     setModalVisible(false);
   };
 
-  const renderBlocks = () =>
-    timeBlocks.map((time, index) => {
-      const materia = dayEvents[time];
-      const height = useSharedValue(60);
+  const handleMateriaDeletion = () => {
+    if (currentBlock) {
+      setWeeklyEvents((prev) => {
+        const dateKey = fechaSeleccionada.toISOString().split("T")[0];
+        const dayEvents = { ...(prev[dateKey] || {}) };
+        delete dayEvents[currentBlock];
+        return { ...prev, [dateKey]: dayEvents };
+      });
+    }
+    setModalVisible(false);
+  };
 
+  const renderBlocks = () => {
+    const dateKey = fechaSeleccionada.toISOString().split("T")[0];
+    const dayEvents = weeklyEvents[dateKey] || {};
+  
+    return timeBlocks.map((time, index) => {
+      const materia = dayEvents[time];
+      const height = useSharedValue(60); // Altura inicial de los bloques
+  
       const animatedHeight = useAnimatedStyle(() => ({
         height: height.value,
       }));
-
+  
       const gestureHandler = useAnimatedGestureHandler({
         onStart: (_, ctx: any) => {
-          ctx.startHeight = height.value;
+          if (materia) {
+            ctx.startHeight = height.value;
+          }
         },
         onActive: (event, ctx: any) => {
-          height.value = Math.max(60, ctx.startHeight + event.translationY);
+          if (materia) {
+            const newHeight = ctx.startHeight + event.translationY;
+            const maxHeight = (timeBlocks.length - index) * 60; // Máximo permitido hasta las 7:00 PM
+            height.value = Math.min(Math.max(60, newHeight), maxHeight);
+          }
         },
         onEnd: () => {
-          height.value = Math.round(height.value / 60) * 60; // Redondear al bloque más cercano
+          if (materia) {
+            height.value = Math.round(height.value / 60) * 60; // Redondear al bloque más cercano
+          }
         },
       });
-
+  
       return (
-        <PanGestureHandler key={index} onGestureEvent={gestureHandler}>
-          <Animated.View
-            style={[
-              styles.eventSlot,
-              animatedHeight,
-              materia && {
-                backgroundColor: materia.color as unknown as string,
-                borderRadius: 12,
-              },
-            ]}
-          >
-            {materia ? (
-              <TouchableOpacity onPress={() => setModalVisible(true)}>
+        <TouchableOpacity
+          key={index}
+          onPress={() => {
+            if (materia) {
+              setCurrentBlock(time);
+              setModalVisible(true);
+            }
+          }}
+          style={[
+            styles.eventSlot,
+            materia
+              ? { backgroundColor: materia.color, borderRadius: 12 }
+              : { backgroundColor: "#E8EAF6" },
+          ]}
+        >
+          {materia ? (
+            <PanGestureHandler onGestureEvent={gestureHandler}>
+              <Animated.View style={[animatedHeight, styles.centerContent]}>
                 <Text style={styles.eventText}>{String(materia.event)}</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={() => {
-                  setCurrentBlock(time);
-                  setModalVisible(true);
-                }}
-              >
-                <Text style={styles.emptyBlockText}>+</Text>
-              </TouchableOpacity>
-            )}
-          </Animated.View>
-        </PanGestureHandler>
+              </Animated.View>
+            </PanGestureHandler>
+          ) : (
+            <Text style={styles.emptyBlockText}>+</Text>
+          )}
+        </TouchableOpacity>
       );
     });
+  };
+  
 
   return (
     <View style={styles.container}>
@@ -164,6 +188,14 @@ const CalendarScreen: React.FC = () => {
                   <Text style={styles.materiaText}>{materia.event}</Text>
                 </TouchableOpacity>
               ))}
+              {currentBlock && weeklyEvents[fechaSeleccionada.toISOString().split("T")[0]]?.[currentBlock] && (
+                <TouchableOpacity
+                  style={[styles.materiaButton, styles.cancelButton]}
+                  onPress={handleMateriaDeletion}
+                >
+                  <Text style={styles.materiaText}>Eliminar</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={[styles.materiaButton, styles.cancelButton]}
                 onPress={() => setModalVisible(false)}
@@ -200,6 +232,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
+    borderRadius: 12,
   },
   header: {
     paddingVertical: 20,
@@ -237,6 +270,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#DDD",
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: 12,
   },
   eventText: {
     fontSize: 16,
@@ -263,6 +297,20 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  modalMessage: {
+    fontSize: 16,
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  deleteButton: {
+    backgroundColor: "#FFCDD2",
+    marginLeft: 10,
+  },
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
@@ -282,6 +330,10 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: "#FFCDD2",
+  },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
