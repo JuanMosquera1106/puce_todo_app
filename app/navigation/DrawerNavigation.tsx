@@ -24,7 +24,7 @@ const DrawerNavigation: React.FC<any> = (props) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [menuVisibleId, setMenuVisibleId] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [guiaVisible, setGuiaVisible] = useState(false); // Estado para la visibilidad de Guide
+  const [guiaVisible, setGuiaVisible] = useState(false); // Estado para mostrar el modal de Guide
 
   const handleEditar = (materiaId: string) => {
     setMateriaSeleccionada(materiaId);
@@ -159,16 +159,15 @@ const DrawerNavigation: React.FC<any> = (props) => {
 
         <TouchableOpacity
           style={styles.drawerItem}
-          onPress={() => setGuiaVisible(true)}
+          onPress={() => setGuiaVisible(true)} // Abre el modal
         >
           <Icon name="help" size={20} color="#555" style={styles.drawerIcon} />
           <Text style={styles.drawerText}>Guía Rápida</Text>
         </TouchableOpacity>
 
+
         {/* Modal para mostrar Guide */}
-        <Modal visible={guiaVisible} animationType="slide" transparent={false}>
-          <Guide onDone={() => setGuiaVisible(false)} />
-        </Modal>
+          <Guide visible={guiaVisible} onClose={() => setGuiaVisible(false)} />
         
       </DrawerContentScrollView>
 

@@ -1,11 +1,20 @@
-import React from "react";
-import { StyleSheet, View, Text, Image, Dimensions } from "react-native";
-import AppIntroSlider from "react-native-app-intro-slider";
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  Dimensions,
+  FlatList,
+  TouchableOpacity,
+  Modal,
+} from "react-native";
 
 const { width, height } = Dimensions.get("window");
 
-const Guide = ({ onDone }: { onDone: () => void }) => {
-  // Inicialización directa del array slides
+const Guide = ({ visible, onClose }: { visible: boolean; onClose: () => void }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   const slides = [
     {
       key: "1",
@@ -38,31 +47,59 @@ const Guide = ({ onDone }: { onDone: () => void }) => {
     </View>
   );
 
+  const handleScroll = (event: any) => {
+    const index = Math.round(event.nativeEvent.contentOffset.x / width);
+    setCurrentIndex(index);
+  };
+
   return (
-    <AppIntroSlider
-      renderItem={renderSlide}
-      data={slides}
-      onDone={onDone}
-      showSkipButton={true}
-      onSkip={onDone}
-      renderNextButton={() => <Text style={styles.buttonText}>Next</Text>}
-      renderSkipButton={() => <Text style={styles.buttonText}>Skip</Text>}
-      renderDoneButton={() => <Text style={styles.buttonText}>Done</Text>}
-    />
+    <Modal visible={visible} animationType="slide" transparent={true}>
+      <View style={styles.container}>
+        <FlatList
+          data={slides}
+          renderItem={renderSlide}
+          keyExtractor={(item) => item.key}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleScroll}
+        />
+        <View style={styles.pagination}>
+          {slides.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.dot,
+                index === currentIndex ? styles.activeDot : styles.inactiveDot,
+              ]}
+            />
+          ))}
+        </View>
+        <TouchableOpacity style={styles.exitButton} onPress={onClose}>
+          <Text style={styles.exitButtonText}>Salir</Text>
+        </TouchableOpacity>
+      </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   slide: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    width: "100%",
-    height: "100%",
+    width: width,
+    height: height,
   },
   image: {
-    width: width * 0.6, // 60% del ancho de la pantalla
-    height: height * 0.3, // 30% del alto de la pantalla
+    width: width * 0.6,
+    height: height * 0.3,
     resizeMode: "contain",
     marginBottom: 20,
   },
@@ -79,10 +116,39 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 20,
   },
-  buttonText: {
-    fontSize: 16,
+  pagination: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+    marginTop: 10,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  activeDot: {
+    backgroundColor: "#fff",
+  },
+  inactiveDot: {
+    backgroundColor: "#aaa",
+  },
+  exitButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: "#ff4d4d",
+    borderRadius: 5,
+    marginBottom: 20,
+  },
+  exitButtonText: {
     color: "#fff",
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
