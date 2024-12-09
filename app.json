@@ -11,13 +11,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "scheme": "puceapp",  
+    "scheme": "todoapp",
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.todoapp"  
+      "bundleIdentifier": "com.todoapp"
     },
     "android": {
-      "package": "com.puce.todoapp",  
+      "package": "com.todoapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -25,6 +28,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c63c6960-4aaf-4caa-9ef9-81dff1dd8a4f"
+      }
     }
   }
 }
