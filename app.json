@@ -12,9 +12,6 @@
       "backgroundColor": "#ffffff"
     },
     "scheme": "todoapp",
-    "assetBundlePatterns": [
-      "assets/**/*"
-    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.todoapp"

@@ -4,31 +4,32 @@ import AppIntroSlider from "react-native-app-intro-slider";
 
 const { width, height } = Dimensions.get("window");
 
-const slides = [
-  {
-    key: "1",
-    title: "Organiza tus Materias y Tareas",
-    text: "Crea, edita y gestiona tus materias y tareas diarias con facilidad.",
-    image: { uri: "https://juanmosquera.neocities.org/TODOAPP/task_img_2_slides.png" },
-    backgroundColor: "#59b2ab",
-  },
-  {
-    key: "2",
-    title: "Planifica tu Tiempo",
-    text: "Utiliza el calendario para una planificación diaria más eficiente.",
-    image: { uri: "https://juanmosquera.neocities.org/TODOAPP/calendario_img_slides.png" },
-    backgroundColor: "#febe29",
-  },
-  {
-    key: "3",
-    title: "Controla tu Rendimiento",
-    text: "Visualiza tu rendimiento y mejora tu productividad cada día.",
-    image: { uri: "https://juanmosquera.neocities.org/TODOAPP/alto-rendimiento.png" },
-    backgroundColor: "#3B5998",
-  },
-];
-
 const Guide = ({ onDone }: { onDone: () => void }) => {
+  // Inicialización directa del array slides
+  const slides = [
+    {
+      key: "1",
+      title: "Organiza tus Materias y Tareas",
+      text: "Crea, edita y gestiona tus materias y tareas diarias con facilidad.",
+      image: require("../assets/task_img_2_slides.png"),
+      backgroundColor: "#59b2ab",
+    },
+    {
+      key: "2",
+      title: "Planifica tu Tiempo",
+      text: "Utiliza el calendario para una planificación diaria más eficiente.",
+      image: require("../assets/calendario_img_slides.png"),
+      backgroundColor: "#febe29",
+    },
+    {
+      key: "3",
+      title: "Controla tu Rendimiento",
+      text: "Visualiza tu rendimiento y mejora tu productividad cada día.",
+      image: require("../assets/alto-rendimiento.png"),
+      backgroundColor: "#3B5998",
+    },
+  ];
+
   const renderSlide = ({ item }: { item: typeof slides[0] }) => (
     <View style={[styles.slide, { backgroundColor: item.backgroundColor }]}>
       <Image source={item.image} style={styles.image} />
