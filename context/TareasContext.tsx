@@ -1,8 +1,9 @@
-import React, { createContext, useState, useContext, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { Tarea } from "../interfaces/Tarea";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import moment from "moment";
 
+// Función para generar las fechas repetidas de la tarea
 const generarFechasRepetidas = (tarea: Tarea): Tarea[] => {
   if (!tarea.repetir || tarea.repetir === "No repetir") return [];
 
@@ -10,7 +11,6 @@ const generarFechasRepetidas = (tarea: Tarea): Tarea[] => {
   let fechaActual = moment(tarea.fechaVencimiento).subtract(1, "day");
 
   while (fechaActual.isSameOrAfter(moment().startOf("day"))) {
-    // Omitir la fecha de vencimiento de la tarea principal
     if (fechaActual.isSame(moment(tarea.fechaVencimiento), "day")) {
       fechaActual.subtract(1, tarea.repetir === "Semanal" ? "week" : "month");
       continue;
@@ -40,25 +40,34 @@ const generarFechasRepetidas = (tarea: Tarea): Tarea[] => {
   return instancias.reverse();
 };
 
-// --- Eliminar duplicados ---
+// Eliminar tareas duplicadas
 const eliminarDuplicados = (tareas: Tarea[]): Tarea[] => {
   return [...new Map(tareas.map((t) => [t.id, t])).values()];
 };
 
-// --- Tipo para el contexto ---
+// Interfaz para los eventos del día
+interface DayEvents {
+  [date: string]: {
+    [time: string]: Tarea | null;
+  };
+}
+
 type TareasContextType = {
   tareas: Tarea[];
+  dayEvents: DayEvents;
+  setDayEvents: React.Dispatch<React.SetStateAction<DayEvents>>;
   cargando: boolean;
   agregarTarea: (tarea: Tarea) => Promise<void>;
   actualizarTarea: (tarea: Tarea) => Promise<void>;
   completarTarea: (id: string) => void;
   eliminarTarea: (id: string) => void;
   setFiltroMateria: (materia: string | null) => void;
+  agregarTareaAlCalendario: (tarea: Tarea, time: string, date: string) => void;
 };
 
-// --- Creación del contexto ---
 const TareasContext = createContext<TareasContextType | undefined>(undefined);
 
+// Hook para usar el contexto de tareas
 export const useTareas = () => {
   const context = useContext(TareasContext);
   if (!context) {
@@ -67,71 +76,45 @@ export const useTareas = () => {
   return context;
 };
 
-// --- Proveedor del contexto ---
+// Proveedor del contexto de tareas
 export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
   const [tareas, setTareas] = useState<Tarea[]>([]);
+  const [dayEvents, setDayEvents] = useState<DayEvents>({});
   const [cargando, setCargando] = useState(true);
   const [filtroMateria, setFiltroMateria] = useState<string | null>(null);
 
-  // --- Guardar tareas en almacenamiento persistente ---
-  const guardarTareasEnStorage = async (nuevasTareas: Tarea[]) => {
-    try {
-      const tareasSinDuplicados = eliminarDuplicados(nuevasTareas);
-      await AsyncStorage.setItem("tareas", JSON.stringify(tareasSinDuplicados));
-    } catch (error) {
-      console.error("Error guardando tareas:", error);
-    }
-  };
-
-  // --- Cargar tareas desde almacenamiento persistente ---
+  // Cargar tareas y eventos desde almacenamiento local (AsyncStorage)
   const cargarTareasDesdeStorage = useCallback(async () => {
     try {
       const tareasGuardadas = await AsyncStorage.getItem("tareas");
+      const dayEventsGuardados = await AsyncStorage.getItem("dayEvents");
+
       if (tareasGuardadas) {
-        const tareasConInstancias = JSON.parse(tareasGuardadas);
-        setTareas(tareasConInstancias);
+        setTareas(JSON.parse(tareasGuardadas));
+      }
+      if (dayEventsGuardados) {
+        setDayEvents(JSON.parse(dayEventsGuardados));
       }
     } catch (error) {
-      console.error("Error cargando tareas:", error);
+      console.error("Error cargando datos:", error);
     } finally {
       setCargando(false);
     }
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     cargarTareasDesdeStorage();
   }, [cargarTareasDesdeStorage]);
 
-  // --- Completar una tarea ---
-  const completarTarea = (id: string): void => {
-    const nuevasTareas = tareas.map((tarea) => {
-      if (tarea.id === id) {
-        return { ...tarea, completada: !tarea.completada };
-      }
+  useEffect(() => {
+    async function saveData() {
+      await AsyncStorage.setItem("tareas", JSON.stringify(tareas));
+      await AsyncStorage.setItem("dayEvents", JSON.stringify(dayEvents));
+    }
+    saveData();
+  }, [tareas, dayEvents]);
 
-      return tarea;
-    });
-
-    setTareas(eliminarDuplicados(nuevasTareas));
-    guardarTareasEnStorage(nuevasTareas);
-  };
-
-   // --- Eliminar una tarea y sus instancias ---
-  const eliminarTarea = (id: string): void => {
-    const nuevasTareas = tareas.filter((tarea) => {
-      // Eliminar la tarea principal y todas sus instancias
-      if (tarea.id === id || tarea.id.startsWith(`${id}-`)) {
-        return false;
-      }
-      return true;
-  });
-
-  setTareas(nuevasTareas);
-  guardarTareasEnStorage(nuevasTareas);
-};
-
-
-  // --- Función para transformar la tarea al formato requerido para Supabase ---
+  // Función para transformar la tarea al formato necesario para Supabase
   const transformarTarea = (tarea: Tarea) => {
     const { id, pomodoro, ...resto } = tarea;
     return {
@@ -143,7 +126,7 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
     };
   };
 
-  // --- Insertar tarea en Supabase ---
+  // Insertar tarea en Supabase
   const insertarTareaEnSupabase = async (tarea: Tarea) => {
     try {
       const tareaTransformada = transformarTarea(tarea);
@@ -153,8 +136,7 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            apikey:
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjYnVldmtsaHV5eGN3eWZhemFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE0OTk3NzMsImV4cCI6MjA0NzA3NTc3M30.jPRuol82X1rdiQLWAPrXUsXG-vTs65I_sNzQ-QUeDog",
+            apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjYnVldmtsaHV5eGN3eWZhemFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE0OTk3NzMsImV4cCI6MjA0NzA3NTc3M30.jPRuol82X1rdiQLWAPrXUsXG-vTs65I_sNzQ-QUeDog",
           },
           body: JSON.stringify(tareaTransformada),
         }
@@ -162,13 +144,16 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
       if (!response.ok) {
         console.log("Error al insertar tarea en Supabase:", response.status);
         console.log(tareaTransformada);
+      } else {
+        console.log("Tarea insertada en Supabase:", tareaTransformada);
       }
     } catch (e) {
       console.log("Error al enviar datos a Supabase", e);
+      console.log(tarea);
     }
   };
 
-  // --- Actualizar tarea en Supabase ---
+  // Actualizar tarea en Supabase
   const actualizarTareaEnSupabase = async (tarea: Tarea) => {
     try {
       const tareaTransformada = transformarTarea(tarea);
@@ -178,8 +163,7 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            apikey:
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjYnVldmtsaHV5eGN3eWZhemFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE0OTk3NzMsImV4cCI6MjA0NzA3NTc3M30.jPRuol82X1rdiQLWAPrXUsXG-vTs65I_sNzQ-QUeDog",
+            apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjYnVldmtsaHV5eGN3eWZhemFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE0OTk3NzMsImV4cCI6MjA0NzA3NTc3M30.jPRuol82X1rdiQLWAPrXUsXG-vTs65I_sNzQ-QUeDog",
           },
           body: JSON.stringify(tareaTransformada),
         }
@@ -192,14 +176,14 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // --- Agregar tarea ---
+  // Agregar tarea (también maneja las instancias repetidas)
   const agregarTarea = async (nuevaTarea: Tarea): Promise<void> => {
     const nuevasInstancias = generarFechasRepetidas(nuevaTarea);
     const nuevasTareas = [...tareas, nuevaTarea, ...nuevasInstancias];
     const tareasSinDuplicados = eliminarDuplicados(nuevasTareas);
 
     setTareas(tareasSinDuplicados);
-    guardarTareasEnStorage(tareasSinDuplicados);
+    await AsyncStorage.setItem("tareas", JSON.stringify(tareasSinDuplicados));
 
     await insertarTareaEnSupabase(nuevaTarea);
 
@@ -208,61 +192,72 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // --- Actualizar tarea ---
+  // Actualizar tarea
   const actualizarTarea = async (tareaActualizada: Tarea): Promise<void> => {
-    // Filtra las tareas, eliminando la tarea principal y todas sus instancias relacionadas
-    const tareasFiltradas = tareas.filter(
-      (tarea) => tarea.id !== tareaActualizada.id && !tarea.id.startsWith(`${tareaActualizada.id}-`)
-    );
-  
-    // Generar nuevas instancias si cambian las propiedades clave
-    const nuevasInstancias =
-      tareaActualizada.repetir !== "No repetir"
-        ? generarFechasRepetidas(tareaActualizada).map((instancia) => {
-            // Mantener estado completado si ya existía
-            const instanciaExistente = tareas.find((t) => t.id === instancia.id);
-            return {
-              ...instancia,
-              completada: instanciaExistente?.completada || false,
-            };
-          })
-        : [];
-  
-    // Crear la lista actualizada de tareas
+    const tareasFiltradas = tareas.filter((t) => t.id !== tareaActualizada.id && !t.id.startsWith(`${tareaActualizada.id}-`));
+    const nuevasInstancias = tareaActualizada.repetir !== "No repetir"
+      ? generarFechasRepetidas(tareaActualizada)
+      : [];
+
     const nuevasTareas = [
-      ...tareasFiltradas, // Mantener las tareas existentes sin las eliminadas
-      { ...tareaActualizada, instancias: nuevasInstancias }, // Añadir la tarea principal actualizada
-      ...nuevasInstancias, // Añadir las nuevas instancias
+      ...tareasFiltradas,
+      { ...tareaActualizada, instancias: nuevasInstancias },
+      ...nuevasInstancias,
     ];
-  
-    // Actualizar el estado y almacenamiento
+
     const tareasSinDuplicados = eliminarDuplicados(nuevasTareas);
     setTareas(tareasSinDuplicados);
-    guardarTareasEnStorage(tareasSinDuplicados);
-  
-    // Actualizar en Supabase (tarea principal e instancias)
+    await AsyncStorage.setItem("tareas", JSON.stringify(tareasSinDuplicados));
+
     await actualizarTareaEnSupabase(tareaActualizada);
     for (const instancia of nuevasInstancias) {
       await actualizarTareaEnSupabase(instancia);
     }
-  }; 
+  };
 
-  // --- Aplicar filtro por materia ---
-  const obtenerTareasFiltradas = useCallback(() => {
-    if (!filtroMateria) return tareas;
-    return tareas.filter((tarea) => tarea.materia === filtroMateria);
-  }, [filtroMateria, tareas]);
+  // Marcar tarea como completada
+  const completarTarea = (id: string): void => {
+    const nuevasTareas = tareas.map((tarea) => {
+      if (tarea.id === id) {
+        return { ...tarea, completada: !tarea.completada };
+      }
+      return tarea;
+    });
+
+    setTareas(eliminarDuplicados(nuevasTareas));
+    AsyncStorage.setItem("tareas", JSON.stringify(nuevasTareas));
+  };
+
+  // Eliminar tarea
+  const eliminarTarea = (id: string): void => {
+    const nuevasTareas = tareas.filter((tarea) => !(tarea.id === id || tarea.id.startsWith(`${id}-`)));
+    setTareas(nuevasTareas);
+    AsyncStorage.setItem("tareas", JSON.stringify(nuevasTareas));
+  };
+
+  // Agregar tarea a los eventos del calendario
+  const agregarTareaAlCalendario = (tarea: Tarea, time: string, date: string) => {
+    setDayEvents((prev) => {
+      const updatedDayEvents = { ...prev };
+      if (!updatedDayEvents[date]) updatedDayEvents[date] = {};
+      updatedDayEvents[date][time] = tarea;
+      return updatedDayEvents;
+    });
+  };
 
   return (
     <TareasContext.Provider
       value={{
-        tareas: obtenerTareasFiltradas(),
+        tareas,
+        dayEvents,
+        setDayEvents,
         cargando,
         agregarTarea,
         actualizarTarea,
         completarTarea,
         eliminarTarea,
         setFiltroMateria,
+        agregarTareaAlCalendario,
       }}
     >
       {children}

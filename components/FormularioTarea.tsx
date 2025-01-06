@@ -299,7 +299,7 @@ export default function FormularioTareaModal({
                 onChangeText={(text) => {
                   // Filtra caracteres no permitidos, pero permite espacios
                   const textoFiltrado = text.replace(/[^a-zA-Z0-9\sáéíóúÁÉÍÓÚüÜñÑ.,-]/g, "");
-                  if (textoFiltrado.length <= 30) setTareaNombre(textoFiltrado);
+                  if (textoFiltrado.length <= 29) setTareaNombre(textoFiltrado);
                 }}
                 placeholder="Ej. Tarea de Programación"
               />

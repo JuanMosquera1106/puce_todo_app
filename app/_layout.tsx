@@ -8,6 +8,7 @@ import Toast, { ToastConfigParams } from "react-native-toast-message";
 import { FontAwesome } from "@expo/vector-icons";
 import { Menu, MenuProvider } from "react-native-popup-menu";
 
+
 // Componente personalizado para el Toast con diferentes estilos para éxito y error
 const CustomToast = ({
   text1,

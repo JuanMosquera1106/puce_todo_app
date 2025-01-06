@@ -13,3 +13,11 @@ export interface Tarea {
   };
   instancias?: Tarea[]; // Instancias repetidas generadas
 }
+
+export interface Events {
+  [time: string]: Tarea | null; // Cambiado a Tarea
+}
+
+export interface DayEvents {
+  [date: string]: Events;
+}
