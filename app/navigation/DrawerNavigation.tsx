@@ -12,7 +12,6 @@ import { Menu, MenuOptions, MenuOption, MenuTrigger } from "react-native-popup-m
 import { useCalendar } from "../../context/CalendarContext";
 import { useTareas } from "../../context/TareasContext";
 import { MateriaModal } from "../../components/MateriaModal";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import Guide from "../../components/Guide";
 import { Modal } from "react-native";
 
@@ -172,10 +171,10 @@ const DrawerNavigation: React.FC<any> = (props) => {
       </DrawerContentScrollView>
 
       {/* Botón Flotante para Agregar Materias */}
-      <TouchableOpacity style={styles.addButton} onPress={handleAgregarMateria}>
+      {/* <TouchableOpacity style={styles.addButton} onPress={handleAgregarMateria}>
         <MaterialIcons name="add-box" size={24} color="white" />
         <Text style={styles.addButtonText}>Nueva Materia</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* Modal para Materias */}
       {modalVisible && (

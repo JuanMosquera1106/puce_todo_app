@@ -1,10 +1,11 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { AntDesign, FontAwesome } from "@expo/vector-icons";
+import { AntDesign, FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import { View, Animated, Text, StyleSheet, OpaqueColorValue } from "react-native";
 import HomeScreen from "../(tareas)/index";
 import CalendarScreen from "../calendar";
 import PerformanceScreen from "../performance";
+import SubjectScreen from "../subject";
 
 const Tab = createBottomTabNavigator();
 
@@ -59,6 +60,7 @@ export default function TabNavigation() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Subject" component={SubjectScreen} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
       <Tab.Screen name="Performance" component={PerformanceScreen} />
     </Tab.Navigator>
@@ -70,6 +72,8 @@ const getIcon = (name: string, color: string | OpaqueColorValue | undefined) => 
   switch (name) {
     case "Home":
       return <AntDesign name="home" size={30} color={color} />;
+    case "Subject":
+    return <AntDesign name="book" size={30} color={color} />
     case "Calendar":
       return <AntDesign name="calendar" size={30} color={color} />;
     case "Performance":
@@ -84,6 +88,8 @@ const getLabel = (name: string) => {
   switch (name) {
     case "Home":
       return "Home";
+    case "Subject":
+      return "Materias";
     case "Calendar":
       return "Calendario";
     case "Performance":

@@ -126,6 +126,12 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
     };
   };
 
+    // Función para aplicar el filtro
+    const obtenerTareasFiltradas = useCallback(() => {
+      if (!filtroMateria) return tareas; // Si no hay filtro, retorna todas las tareas
+      return tareas.filter((tarea) => tarea.materia === filtroMateria);
+    }, [filtroMateria, tareas]);
+
   // Insertar tarea en Supabase
   const insertarTareaEnSupabase = async (tarea: Tarea) => {
     try {
@@ -248,7 +254,7 @@ export const TareasProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <TareasContext.Provider
       value={{
-        tareas,
+        tareas: obtenerTareasFiltradas(), // Solo devuelve tareas filtradas
         dayEvents,
         setDayEvents,
         cargando,
