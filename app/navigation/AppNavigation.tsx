@@ -2,6 +2,7 @@ import React from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import DrawerNavigation from "./DrawerNavigation"; // Contenido del Drawer
 import TabNavigation from "./TabNavigation"; // Pestañas de navegación
+import ListaTareasSimple from "../(tareas)/tareas";
 
 const Drawer = createDrawerNavigator();
 

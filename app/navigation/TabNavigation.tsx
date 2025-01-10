@@ -1,25 +1,27 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { AntDesign, FontAwesome, FontAwesome5 } from "@expo/vector-icons";
-import { View, Animated, Text, StyleSheet, OpaqueColorValue } from "react-native";
+import { createStackNavigator } from "@react-navigation/stack";
+import { AntDesign, FontAwesome } from "@expo/vector-icons";
+import { Animated, Text, StyleSheet, OpaqueColorValue } from "react-native";
 import HomeScreen from "../(tareas)/index";
+import ListaTareasSimple from "../(tareas)/tareas";
 import CalendarScreen from "../calendar";
 import PerformanceScreen from "../performance";
 import SubjectScreen from "../subject";
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
 export default function TabNavigation() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color }) => {
-          // Initialize bounce animation only if focused
           if (focused) {
             const bounceAnim = new Animated.Value(1);
 
             Animated.spring(bounceAnim, {
-              toValue: 1.2, // Scale up value for focused icon
+              toValue: 1.2,
               friction: 3,
               useNativeDriver: true,
             }).start();
@@ -38,10 +40,9 @@ export default function TabNavigation() {
             );
           }
 
-          // Return static icon for non-focused tabs
           return getIcon(route.name, color);
         },
-        tabBarLabel: ({ focused, color }) => (
+        tabBarLabel: ({ color }) => (
           <Text
             style={{
               fontSize: 14,
@@ -59,7 +60,20 @@ export default function TabNavigation() {
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen
+        name="HomeStack"
+        component={HomeStack}
+        options={{ title: "Inicio" }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault(); // Evita la navegación predeterminada
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "HomeStack" }], // Reinicia el stack y lleva a HomeScreen
+            });
+          },
+        })}
+      />
       <Tab.Screen name="Subject" component={SubjectScreen} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
       <Tab.Screen name="Performance" component={PerformanceScreen} />
@@ -67,13 +81,23 @@ export default function TabNavigation() {
   );
 }
 
-// Helper function to get icon based on route name
+// Stack Navigator para Home y ListaTareasSimple
+const HomeStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="ListaTareasSimple" component={ListaTareasSimple} />
+    </Stack.Navigator>
+  );
+};
+
+// Helper para íconos
 const getIcon = (name: string, color: string | OpaqueColorValue | undefined) => {
   switch (name) {
-    case "Home":
+    case "HomeStack":
       return <AntDesign name="home" size={30} color={color} />;
     case "Subject":
-    return <AntDesign name="book" size={30} color={color} />
+      return <AntDesign name="book" size={30} color={color} />;
     case "Calendar":
       return <AntDesign name="calendar" size={30} color={color} />;
     case "Performance":
@@ -83,10 +107,10 @@ const getIcon = (name: string, color: string | OpaqueColorValue | undefined) => 
   }
 };
 
-// Helper function to get label based on route name
+// Helper para etiquetas
 const getLabel = (name: string) => {
   switch (name) {
-    case "Home":
+    case "HomeStack":
       return "Home";
     case "Subject":
       return "Materias";
@@ -114,15 +138,5 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: "rgba(255, 255, 255, 0.2)",
     elevation: 10,
-  },
-  badge: {
-    backgroundColor: "#ff5722",
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "bold",
-    borderRadius: 10,
-    minWidth: 18,
-    textAlign: "center",
-    paddingHorizontal: 5,
   },
 });

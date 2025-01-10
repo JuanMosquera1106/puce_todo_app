@@ -38,11 +38,13 @@ export default function FormularioTareaModal({
   onClose,
   tareaInicial,
   esEditar = false,
+  fechaSeleccionada, // Nuevo prop
 }: {
   visible: boolean;
   onClose: () => void;
   tareaInicial?: Tarea;
   esEditar?: boolean;
+  fechaSeleccionada?: Date | null; // Definición del nuevo prop
 }) {
   const { agregarTarea, actualizarTarea } = useTareas();
   const { agregarMateriaAlContexto, materiasGlobales } = useCalendar();
@@ -53,9 +55,16 @@ export default function FormularioTareaModal({
   const [tareaMateria, setTareaMateria] = useState(
     tareaInicial?.materia || "Ninguna",
   );
-  const [tareaFechaVencimiento, setTareaFechaVencimiento] = useState(
-    tareaInicial?.fechaVencimiento || new Date().toLocaleDateString("en-CA"),
-  );
+  const [tareaFechaVencimiento, setTareaFechaVencimiento] = useState(() => {
+    if (tareaInicial?.fechaVencimiento) {
+      return tareaInicial.fechaVencimiento;
+    }
+    if (fechaSeleccionada) {
+      return moment(fechaSeleccionada).format("YYYY-MM-DD");
+    }
+    return moment().format("YYYY-MM-DD");
+  });  
+  
   const [materiasDisponibles, setMateriasDisponibles] = useState<string[]>([]);
   const [repetirFrecuencia, setRepetirFrecuencia] = useState<string | null>(
     tareaInicial?.repetir || null,
@@ -104,6 +113,13 @@ export default function FormularioTareaModal({
   });
 
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Nuevo efecto para sincronizar fechaSeleccionada
+  useEffect(() => {
+    if (!esEditar && fechaSeleccionada) {
+      setTareaFechaVencimiento(moment(fechaSeleccionada).startOf("day").format("YYYY-MM-DD"));
+    }
+  }, [fechaSeleccionada, esEditar]);
 
   useEffect(() => {
     setMateriasDisponibles(materiasGlobales.map((materia) => materia.event));

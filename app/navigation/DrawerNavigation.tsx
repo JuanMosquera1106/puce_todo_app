@@ -168,6 +168,15 @@ const DrawerNavigation: React.FC<any> = (props) => {
         {/* Modal para mostrar Guide */}
           <Guide visible={guiaVisible} onClose={() => setGuiaVisible(false)} />
         
+          {/* Nueva opción para la lista de tareas */}
+          <TouchableOpacity
+            style={styles.drawerItem}
+            onPress={() => props.navigation.navigate("Main Tabs", { screen: "HomeStack", params: { screen: "ListaTareasSimple" } })} // Navega al TabNavigator, luego al HomeStack, y finalmente a ListaTareas
+          >
+            <Icon name="checklist" size={20} color="#555" style={styles.drawerIcon} />
+            <Text style={styles.drawerText}>Lista de Tareas</Text>
+          </TouchableOpacity>
+
       </DrawerContentScrollView>
 
       {/* Botón Flotante para Agregar Materias */}
